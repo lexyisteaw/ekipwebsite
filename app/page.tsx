@@ -138,7 +138,7 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 2 }}
+          transition={{ delay: 1 }}
           className="fixed inset-0 z-20 flex items-center justify-center pointer-events-none px-4"
         >
           <motion.div
