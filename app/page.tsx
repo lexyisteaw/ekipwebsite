@@ -19,30 +19,63 @@ export default function Home() {
     // Kullanıcı ilk etkileşiminde sesi aç
     const handleFirstInteraction = () => {
       if (!hasInteracted && videoRef.current) {
-        videoRef.current.muted = false;
-        setIsMuted(false);
-        setHasInteracted(true);
+        // Mobil için: önce play, sonra unmute
+        videoRef.current.play().then(() => {
+          if (videoRef.current) {
+            videoRef.current.muted = false;
+            videoRef.current.volume = 1.0;
+            setIsMuted(false);
+            setHasInteracted(true);
+          }
+        }).catch(err => {
+          console.log("Audio play error:", err);
+          // Hata olursa sadece muted'ı kaldır
+          if (videoRef.current) {
+            videoRef.current.muted = false;
+            setIsMuted(false);
+            setHasInteracted(true);
+          }
+        });
       }
     };
 
     // Tüm etkileşim olaylarını dinle
-    document.addEventListener('click', handleFirstInteraction);
-    document.addEventListener('touchstart', handleFirstInteraction);
-    document.addEventListener('keydown', handleFirstInteraction);
+    document.addEventListener('click', handleFirstInteraction, { once: false });
+    document.addEventListener('touchstart', handleFirstInteraction, { once: false });
+    document.addEventListener('touchend', handleFirstInteraction, { once: false });
+    document.addEventListener('keydown', handleFirstInteraction, { once: false });
 
     return () => {
       document.removeEventListener('click', handleFirstInteraction);
       document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('touchend', handleFirstInteraction);
       document.removeEventListener('keydown', handleFirstInteraction);
     };
   }, [hasInteracted]);
 
-  const toggleMute = (e: React.MouseEvent) => {
+  const toggleMute = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+    
     if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-      setHasInteracted(true);
+      const newMutedState = !isMuted;
+      
+      // Mobil için: play'i tekrar tetikle
+      videoRef.current.play().then(() => {
+        if (videoRef.current) {
+          videoRef.current.muted = newMutedState;
+          videoRef.current.volume = newMutedState ? 0 : 1.0;
+          setIsMuted(newMutedState);
+          setHasInteracted(true);
+        }
+      }).catch(() => {
+        // Fallback
+        if (videoRef.current) {
+          videoRef.current.muted = newMutedState;
+          setIsMuted(newMutedState);
+          setHasInteracted(true);
+        }
+      });
     }
   };
 
@@ -59,6 +92,9 @@ export default function Home() {
           muted
           playsInline
           controls={false}
+          preload="auto"
+          webkit-playsinline="true"
+          x5-playsinline="true"
           className="w-full h-full object-cover md:w-auto md:h-full md:max-w-[80vh] md:object-contain"
         >
           <source src="/video.mp4" type="video/mp4" />
@@ -71,16 +107,16 @@ export default function Home() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2 }}
-          className="fixed inset-0 z-20 flex items-center justify-center pointer-events-none"
+          className="fixed inset-0 z-20 flex items-center justify-center pointer-events-none px-4"
         >
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="glass-panel px-8 py-4 rounded-full"
+            className="glass-panel px-6 py-4 rounded-full max-w-md text-center"
           >
-            <p className="text-white font-bold tracking-wider flex items-center gap-3">
-              <Volume2 size={24} className="text-primary" />
-              Sesi açmak için herhangi bir yere tıklayın
+            <p className="text-white font-bold tracking-wider flex items-center justify-center gap-3 text-sm md:text-base">
+              <Volume2 size={24} className="text-primary flex-shrink-0" />
+              <span>Sesi açmak için herhangi bir yere dokunun</span>
             </p>
           </motion.div>
         </motion.div>
@@ -92,7 +128,8 @@ export default function Home() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1, duration: 0.5 }}
         onClick={toggleMute}
-        className="fixed bottom-8 right-8 z-30 w-14 h-14 glass-panel rounded-full flex items-center justify-center hover:bg-primary hover:border-primary transition-all duration-300 group"
+        onTouchEnd={toggleMute}
+        className="fixed bottom-8 right-8 z-30 w-14 h-14 glass-panel rounded-full flex items-center justify-center hover:bg-primary hover:border-primary transition-all duration-300 group active:scale-95"
         title={isMuted ? "Sesi Aç" : "Sesi Kapat"}
       >
         {isMuted ? (
