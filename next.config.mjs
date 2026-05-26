@@ -3,6 +3,14 @@ const nextConfig = {
   images: {
     domains: ['images.unsplash.com', 'ui-avatars.com'],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/yonetim-68riders-burak2026',
+        destination: '/68riderstr',
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -31,7 +39,7 @@ const nextConfig = {
         ],
       },
       {
-        source: '/admin/:path*',
+        source: '/68riderstr/:path*',
         headers: [
           {
             key: 'Cache-Control',
