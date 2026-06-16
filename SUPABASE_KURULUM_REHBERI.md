@@ -77,8 +77,9 @@ Proje hazır olunca:
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-# Admin Panel Configuration  
-NEXT_PUBLIC_ADMIN_PASSWORD=Aksaray6878.
+# Admin Panel Configuration
+ADMIN_PASSWORD=guclu_admin_sifreniz
+ADMIN_SESSION_SECRET=uzun_rastgele_oturum_anahtariniz
 ```
 
 3. **KAYDET** (Ctrl+S)
@@ -98,7 +99,7 @@ NEXT_PUBLIC_ADMIN_PASSWORD=Aksaray6878.
 
 4. **Admin panele git:** http://localhost:3000/yonetim-68riders-burak2026
 
-5. **Şifre:** Aksaray6878.
+5. **Şifre:** `.env.local` dosyasında `ADMIN_PASSWORD` olarak belirlediğiniz değer
 
 6. **Üye ekle, etkinlik ekle - test et!** ✅
 

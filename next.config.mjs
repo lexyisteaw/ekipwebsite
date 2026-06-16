@@ -42,8 +42,12 @@ const nextConfig = {
         ],
       },
       {
-        source: '/68riderstr/:path*',
+        source: '/:adminPath(68riderstr|yonetim-68riders-burak2026)/:path*',
         headers: [
+          {
+            key: 'X-Robots-Tag',
+            value: 'noindex, nofollow, noarchive',
+          },
           {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate',

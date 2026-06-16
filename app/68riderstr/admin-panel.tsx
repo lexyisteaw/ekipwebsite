@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   Calendar, 
   Image as ImageIcon, 
@@ -16,19 +16,9 @@ import {
   Eye,
   Save,
   X,
-  Shield,
-  AlertTriangle
+  Shield
 } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
-import { 
-  checkRateLimit, 
-  generateSessionToken, 
-  validateSessionToken,
-  sanitizeInput,
-  validateInput,
-  logSecurityEvent,
-  checkPasswordStrength
-} from "@/lib/security";
 
 // Event Modal Component
 function EventModal({ event, onSave, onClose }: any) {
@@ -1203,45 +1193,6 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
   } = useData();
 
   const [activeTab, setActiveTab] = useState<"dashboard" | "events" | "gallery" | "messages" | "members" | "about" | "settings">("dashboard");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
-  const [sessionToken, setSessionToken] = useState<string>("");
-  const [loginAttempts, setLoginAttempts] = useState(0);
-  const [isBlocked, setIsBlocked] = useState(false);
-  const [blockUntil, setBlockUntil] = useState<number>(0);
-  const [showPasswordStrength, setShowPasswordStrength] = useState(false);
-  
-  // Session kontrolü - sayfa yüklendiğinde
-  useEffect(() => {
-    const isAuth = sessionStorage.getItem("admin_authenticated");
-    const token = sessionStorage.getItem("admin_session_token");
-    
-    if (isAuth === "true" && token) {
-      // Token'ı doğrula
-      if (validateSessionToken(token)) {
-        setIsAuthenticated(true);
-        setSessionToken(token);
-        logSecurityEvent('SESSION_RESTORED', { timestamp: Date.now() });
-      } else {
-        // Token geçersiz, oturumu kapat
-        handleLogout();
-        logSecurityEvent('INVALID_SESSION_TOKEN', { timestamp: Date.now() });
-      }
-    }
-    
-    // Session timeout kontrolü (her 5 dakikada bir)
-    const interval = setInterval(() => {
-      if (isAuth === "true" && token) {
-        if (!validateSessionToken(token)) {
-          handleLogout();
-          alert('Oturumunuz sona erdi. Lütfen tekrar giriş yapın.');
-          logSecurityEvent('SESSION_EXPIRED', { timestamp: Date.now() });
-        }
-      }
-    }, 5 * 60 * 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
   
   // Modal states
   const [showEventModal, setShowEventModal] = useState(false);
@@ -1263,88 +1214,8 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     pendingMessages: messages.filter(m => m.status === "unread").length
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Input validation
-    if (!password || password.length < 6) {
-      alert("Geçersiz şifre formatı!");
-      logSecurityEvent('INVALID_PASSWORD_FORMAT', { length: password.length });
-      return;
-    }
-    
-    // XSS koruması
-    const sanitizedPassword = sanitizeInput(password);
-    
-    // Rate limiting kontrolü
-    const clientId = 'admin_login'; // Gerçek uygulamada IP adresi kullanılmalı
-    const rateLimit = checkRateLimit(clientId, 5, 15 * 60 * 1000, 30 * 60 * 1000);
-    
-    if (!rateLimit.allowed) {
-      setIsBlocked(true);
-      setBlockUntil(rateLimit.blockUntil || 0);
-      const remainingMinutes = Math.ceil((rateLimit.blockUntil! - Date.now()) / 60000);
-      alert(`Çok fazla başarısız deneme! ${remainingMinutes} dakika sonra tekrar deneyin.`);
-      logSecurityEvent('RATE_LIMIT_EXCEEDED', { 
-        blockUntil: rateLimit.blockUntil,
-        attempts: loginAttempts + 1
-      });
-      return;
-    }
-    
-    const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || "68riders2026";
-    
-    if (sanitizedPassword === adminPassword) {
-      // Başarılı giriş
-      const token = generateSessionToken();
-      
-      setIsAuthenticated(true);
-      setSessionToken(token);
-      setLoginAttempts(0);
-      
-      // Session storage'a kaydet
-      sessionStorage.setItem("admin_authenticated", "true");
-      sessionStorage.setItem("admin_session_token", token);
-      sessionStorage.setItem("admin_session_timestamp", Date.now().toString());
-      
-      logSecurityEvent('LOGIN_SUCCESS', { 
-        timestamp: Date.now(),
-        token: token.substring(0, 8) + '...' // Sadece ilk 8 karakter
-      });
-      
-      // Rate limit'i sıfırla
-      checkRateLimit(clientId, 5, 0, 0);
-    } else {
-      // Başarısız giriş
-      const newAttempts = loginAttempts + 1;
-      setLoginAttempts(newAttempts);
-      setPassword("");
-      
-      logSecurityEvent('LOGIN_FAILED', { 
-        attempts: newAttempts,
-        remainingAttempts: rateLimit.remainingAttempts
-      });
-      
-      if (rateLimit.remainingAttempts <= 2) {
-        alert(`Yanlış şifre! Kalan deneme hakkı: ${rateLimit.remainingAttempts}`);
-      } else {
-        alert("Yanlış şifre!");
-      }
-    }
-  };
-  
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setSessionToken("");
-    setPassword("");
-    setLoginAttempts(0);
-    
-    sessionStorage.removeItem("admin_authenticated");
-    sessionStorage.removeItem("admin_session_token");
-    sessionStorage.removeItem("admin_session_timestamp");
-    sessionStorage.removeItem("csrf_token");
-    
-    logSecurityEvent('LOGOUT', { timestamp: Date.now() });
+    onLogout?.();
   };
 
   const handleDeleteEvent = (id: number) => {
@@ -1456,115 +1327,6 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     setEditingMember(null);
     setShowMemberModal(true);
   };
-
-  if (!isAuthenticated) {
-    return (
-      <main className="relative min-h-screen flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="glass-panel p-12 rounded-xl max-w-md w-full"
-        >
-          <div className="flex items-center justify-center mb-6">
-            <Shield className="text-primary" size={48} />
-          </div>
-          
-          <h1 className="text-4xl font-display font-bold mb-2 text-center">
-            ADMİN <span className="text-primary">PANELİ</span>
-          </h1>
-          
-          <p className="text-sm text-gray-400 text-center mb-8">
-            🔒 Güvenli Giriş
-          </p>
-          
-          {isBlocked && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg flex items-start gap-3">
-              <AlertTriangle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
-              <div>
-                <p className="text-red-500 font-bold text-sm">Hesap Geçici Olarak Kilitlendi</p>
-                <p className="text-red-400 text-xs mt-1">
-                  Çok fazla başarısız deneme. {Math.ceil((blockUntil - Date.now()) / 60000)} dakika sonra tekrar deneyin.
-                </p>
-              </div>
-            </div>
-          )}
-          
-          {loginAttempts > 0 && !isBlocked && (
-            <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500 rounded-lg">
-              <p className="text-yellow-500 text-sm">
-                ⚠️ Başarısız deneme: {loginAttempts}/5
-              </p>
-            </div>
-          )}
-          
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label htmlFor="password" className="block text-sm font-bold mb-2">
-                Şifre
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setShowPasswordStrength(e.target.value.length > 0);
-                }}
-                onFocus={() => setShowPasswordStrength(true)}
-                onBlur={() => setShowPasswordStrength(false)}
-                disabled={isBlocked}
-                maxLength={100}
-                className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Şifrenizi girin"
-                autoComplete="current-password"
-              />
-              
-              {showPasswordStrength && password.length > 0 && (
-                <div className="mt-2 text-xs text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1 bg-dark rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all ${
-                          password.length < 8 ? 'bg-red-500 w-1/3' :
-                          password.length < 12 ? 'bg-yellow-500 w-2/3' :
-                          'bg-green-500 w-full'
-                        }`}
-                      />
-                    </div>
-                    <span className={
-                      password.length < 8 ? 'text-red-500' :
-                      password.length < 12 ? 'text-yellow-500' :
-                      'text-green-500'
-                    }>
-                      {password.length < 8 ? 'Zayıf' :
-                       password.length < 12 ? 'Orta' :
-                       'Güçlü'}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <button
-              type="submit"
-              disabled={isBlocked || !password}
-              className="w-full px-8 py-4 bg-primary text-white font-bold tracking-wider hover:bg-white hover:text-dark transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary disabled:hover:text-white"
-            >
-              {isBlocked ? '🔒 KİLİTLİ' : 'GİRİŞ YAP'}
-            </button>
-          </form>
-          
-          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <p className="text-xs text-blue-400 text-center">
-              <Shield size={12} className="inline mr-1" />
-              Güvenlik: Rate limiting, XSS koruması, Session timeout aktif
-            </p>
-          </div>
-        </motion.div>
-      </main>
-    );
-  }
 
   return (
     <main className="relative min-h-screen pt-32 pb-20 px-4">

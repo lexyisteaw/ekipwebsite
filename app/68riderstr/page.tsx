@@ -1,12 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield } from "lucide-react";
 import dynamic from "next/dynamic";
 
-// Admin panelini dinamik import et
 const AdminPanelContent = dynamic(() => import("./admin-panel"), {
   ssr: false,
   loading: () => (
@@ -22,39 +21,55 @@ export default function AdminLogin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Check if already authenticated
-    const auth = sessionStorage.getItem("admin_auth_68riders");
-    if (auth === "authenticated") {
-      setIsAuthenticated(true);
+    async function checkSession() {
+      try {
+        const response = await fetch("/api/admin/session", { cache: "no-store" });
+        const data = await response.json();
+        setIsAuthenticated(Boolean(data.authenticated));
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
     }
-    setIsLoading(false);
+
+    checkSession();
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Şifre kontrolü - SADECE environment variable'dan
-    const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
-    
-    if (!correctPassword) {
-      setError("Sistem hatası! Lütfen yöneticiyle iletişime geçin.");
-      return;
-    }
-    
-    if (password === correctPassword) {
-      sessionStorage.setItem("admin_auth_68riders", "authenticated");
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      if (!response.ok) {
+        setError("Yanlış şifre. Tekrar deneyin.");
+        setPassword("");
+        return;
+      }
+
       setIsAuthenticated(true);
-      setError("");
-    } else {
-      setError("Yanlış şifre! Tekrar deneyin.");
       setPassword("");
+    } catch {
+      setError("Giriş kontrolü yapılamadı. Lütfen tekrar deneyin.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("admin_auth_68riders");
+  const handleLogout = async () => {
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => null);
     setIsAuthenticated(false);
     setPassword("");
   };
@@ -87,9 +102,10 @@ export default function AdminLogin() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
                 placeholder="Şifrenizi girin"
+                autoComplete="current-password"
                 autoFocus
               />
             </div>
@@ -102,9 +118,10 @@ export default function AdminLogin() {
 
             <button
               type="submit"
-              className="w-full px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors"
+              disabled={isSubmitting || !password}
+              className="w-full px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors disabled:cursor-not-allowed disabled:opacity-60"
             >
-              GİRİŞ YAP
+              {isSubmitting ? "Kontrol ediliyor..." : "GİRİŞ YAP"}
             </button>
           </form>
 
@@ -113,7 +130,7 @@ export default function AdminLogin() {
               onClick={() => router.push("/")}
               className="text-sm text-gray-400 hover:text-white transition-colors"
             >
-              ← Ana Sayfaya Dön
+              Ana Sayfaya Dön
             </button>
           </div>
         </motion.div>
@@ -121,6 +138,5 @@ export default function AdminLogin() {
     );
   }
 
-  // Authenticated - Show admin panel
   return <AdminPanelContent onLogout={handleLogout} />;
 }
