@@ -3,6 +3,7 @@ import { Inter, Syncopate } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { DataProvider } from "@/contexts/DataContext";
+import ExhaustSound from "@/components/ExhaustSound";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const syncopate = Syncopate({
@@ -178,6 +179,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${syncopate.variable} font-sans bg-dark text-white`}>
         <DataProvider>
           <Navbar />
+          <ExhaustSound />
           {children}
         </DataProvider>
       </body>
