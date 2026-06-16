@@ -1,104 +1,124 @@
 "use client";
 
 import LoadingScreen from "@/components/LoadingScreen";
-import { useEffect, useRef, useState } from "react";
-import { Volume2, VolumeX } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { CalendarDays, Camera, MapPin, Users } from "lucide-react";
+
+const quickLinks = [
+  {
+    href: "/faaliyetler",
+    label: "Faaliyetler",
+    icon: CalendarDays,
+  },
+  {
+    href: "/uyeler",
+    label: "Üyeler",
+    icon: Users,
+  },
+  {
+    href: "/galeri",
+    label: "Galeri",
+    icon: Camera,
+  },
+];
 
 export default function Home() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
-  const [showHint, setShowHint] = useState(true);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    video.play().catch(() => {
-      // Tarayıcı otomatik oynatmayı engellerse kullanıcı ses butonuyla başlatabilir.
-    });
-
-    const timer = window.setTimeout(() => setShowHint(false), 3500);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const toggleMute = (event: React.MouseEvent | React.TouchEvent) => {
-    event.stopPropagation();
-    event.preventDefault();
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    const nextMuted = !isMuted;
-
-    video
-      .play()
-      .catch(() => null)
-      .finally(() => {
-        video.muted = nextMuted;
-        video.volume = nextMuted ? 0 : 1;
-        setIsMuted(nextMuted);
-        setShowHint(false);
-      });
-  };
-
   return (
-    <main className="fixed inset-0 w-full h-full overflow-hidden bg-dark">
+    <main className="relative min-h-screen overflow-hidden bg-dark text-white">
       <LoadingScreen />
 
-      <div className="absolute inset-0 flex items-center justify-center bg-dark overflow-hidden pointer-events-none">
-        <video
-          ref={videoRef}
-          autoPlay
-          loop
-          muted
-          playsInline
-          controls={false}
-          preload="auto"
-          webkit-playsinline="true"
-          x5-playsinline="true"
-          x-webkit-airplay="allow"
-          className="w-full h-full object-cover md:w-auto md:h-full md:max-w-[80vh] md:object-contain"
-        >
-          <source src="/video.mp4" type="video/mp4" />
-        </video>
-      </div>
+      <section className="relative min-h-screen flex items-center pt-24 pb-12 px-4">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,0,51,0.22),transparent_28%),radial-gradient(circle_at_75%_70%,rgba(255,255,255,0.08),transparent_24%)]" />
+        <div className="absolute inset-0 opacity-25 bg-[linear-gradient(115deg,transparent_0%,transparent_44%,rgba(255,0,51,0.35)_45%,transparent_47%,transparent_100%)]" />
+        <div className="absolute left-0 right-0 bottom-20 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+        <div className="absolute left-1/2 top-24 bottom-0 w-px bg-gradient-to-b from-primary/60 via-white/10 to-transparent rotate-12" />
 
-      {showHint && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="fixed inset-0 z-20 flex items-center justify-center pointer-events-none px-4"
-        >
+        <div className="relative z-10 max-w-7xl mx-auto w-full grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
           <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="glass-panel px-6 py-4 rounded-full max-w-md text-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+            className="space-y-8"
           >
-            <p className="text-white font-bold tracking-wider flex items-center justify-center gap-3 text-sm md:text-base">
-              <Volume2 size={24} className="text-primary flex-shrink-0" />
-              <span>Sesi açmak için sağ alttaki butonu kullanın</span>
-            </p>
-          </motion.div>
-        </motion.div>
-      )}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-sm text-gray-300">
+              <MapPin size={16} className="text-primary" />
+              Aksaray motosiklet topluluğu
+            </div>
 
-      <motion.button
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1, duration: 0.5 }}
-        onClick={toggleMute}
-        onTouchEnd={toggleMute}
-        className="fixed bottom-8 right-8 z-30 w-14 h-14 glass-panel rounded-full flex items-center justify-center hover:bg-primary hover:border-primary transition-all duration-300 group active:scale-95"
-        title={isMuted ? "Sesi Aç" : "Sesi Kapat"}
-      >
-        {isMuted ? (
-          <VolumeX size={24} className="text-white group-hover:scale-110 transition-transform" />
-        ) : (
-          <Volume2 size={24} className="text-primary group-hover:text-white group-hover:scale-110 transition-all" />
-        )}
-      </motion.button>
+            <div>
+              <h1 className="font-display font-bold text-5xl sm:text-6xl lg:text-8xl leading-tight">
+                68 <span className="text-primary">RIDERS</span>
+              </h1>
+              <p className="mt-5 max-w-2xl text-lg md:text-xl text-gray-300 leading-relaxed">
+                Ride Beyond Limits. Aksaray&apos;da yol, kardeşlik ve motosiklet tutkusunu aynı rotada buluşturan ekip.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/hakkimizda"
+                className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors"
+              >
+                Hakkımızda
+              </Link>
+              <Link
+                href="/iletisim"
+                className="px-6 py-3 border border-white/20 text-white font-bold rounded-lg hover:border-primary hover:text-primary transition-colors"
+              >
+                İletişim
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 max-w-xl">
+              {quickLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="glass-panel rounded-lg p-4 hover:border-primary/70 hover:bg-white/10 transition-colors"
+                  >
+                    <Icon size={22} className="text-primary mb-3" />
+                    <span className="text-sm font-bold">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="relative min-h-[360px] lg:min-h-[560px] flex items-center justify-center"
+          >
+            <div className="absolute w-[78%] aspect-square rounded-full border border-white/10" />
+            <div className="absolute w-[58%] aspect-square rounded-full border border-primary/30" />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+              className="absolute w-[72%] aspect-square rounded-full border-t-2 border-primary/80 border-r border-r-white/20"
+            />
+            <motion.div
+              animate={{ y: [0, -14, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              className="relative z-10"
+            >
+              <Image
+                src="/logo.png"
+                alt="68 Riders Logo"
+                width={420}
+                height={420}
+                priority
+                className="w-64 sm:w-80 lg:w-[420px] h-auto drop-shadow-[0_0_55px_rgba(255,0,51,0.45)]"
+              />
+            </motion.div>
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-72 h-10 bg-primary/20 blur-3xl" />
+          </motion.div>
+        </div>
+      </section>
     </main>
   );
 }
