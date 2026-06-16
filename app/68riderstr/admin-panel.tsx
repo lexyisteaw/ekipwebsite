@@ -684,6 +684,7 @@ function MemberModal({ member, onSave, onClose }: any) {
   const [previewUrl, setPreviewUrl] = useState(member?.photo || "");
   const [coverPreviewUrl, setCoverPreviewUrl] = useState(member?.coverImage || "");
   const [galleryInput, setGalleryInput] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -698,7 +699,7 @@ function MemberModal({ member, onSave, onClose }: any) {
           
           let width = img.width;
           let height = img.height;
-          const maxWidth = 600; // Profil fotoğrafı için 600px yeterli
+          const maxWidth = 420; // Profil fotoğrafı için 600px yeterli
           
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
@@ -709,7 +710,7 @@ function MemberModal({ member, onSave, onClose }: any) {
           canvas.height = height;
           ctx?.drawImage(img, 0, 0, width, height);
           
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
           setPreviewUrl(compressedBase64);
           setFormData({ ...formData, photo: compressedBase64 });
         };
@@ -732,7 +733,7 @@ function MemberModal({ member, onSave, onClose }: any) {
           
           let width = img.width;
           let height = img.height;
-          const maxWidth = 1200; // Cover için 1200px
+          const maxWidth = 800; // Cover için 1200px
           
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
@@ -743,7 +744,7 @@ function MemberModal({ member, onSave, onClose }: any) {
           canvas.height = height;
           ctx?.drawImage(img, 0, 0, width, height);
           
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.65);
           setCoverPreviewUrl(compressedBase64);
           setFormData({ ...formData, coverImage: compressedBase64 });
         };
@@ -759,7 +760,7 @@ function MemberModal({ member, onSave, onClose }: any) {
       const newGallery = [...(formData.gallery || [])];
       let filesProcessed = 0;
       
-      Array.from(files).forEach((file) => {
+      Array.from(files).slice(0, 6).forEach((file) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const img = new Image();
@@ -769,7 +770,7 @@ function MemberModal({ member, onSave, onClose }: any) {
             
             let width = img.width;
             let height = img.height;
-            const maxWidth = 800; // Galeri için 800px
+            const maxWidth = 520; // Galeri için 800px
             
             if (width > maxWidth) {
               height = (height * maxWidth) / width;
@@ -780,11 +781,11 @@ function MemberModal({ member, onSave, onClose }: any) {
             canvas.height = height;
             ctx?.drawImage(img, 0, 0, width, height);
             
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.55);
             newGallery.push(compressedBase64);
             filesProcessed++;
             
-            if (filesProcessed === files.length) {
+            if (filesProcessed === Math.min(files.length, 6)) {
               setFormData({ ...formData, gallery: newGallery });
             }
           };
@@ -795,9 +796,16 @@ function MemberModal({ member, onSave, onClose }: any) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    if (isSaving) return;
+
+    setIsSaving(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -1156,14 +1164,16 @@ function MemberModal({ member, onSave, onClose }: any) {
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors"
+              disabled={isSaving}
+              className="flex-1 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-primary disabled:hover:text-white"
             >
-              KAYDET
+              {isSaving ? "KAYDEDILIYOR..." : "KAYDET"}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors"
+              disabled={isSaving}
+              className="px-6 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
             >
               İPTAL
             </button>
