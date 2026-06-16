@@ -4,11 +4,29 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useData } from "@/contexts/DataContext";
 
+// SEO için metadata (Client Component olduğu için parent'tan gelecek)
+// export const metadata = {...} kullanılamaz, onun yerine layout.tsx'e ekleyelim
+
 export default function Hakkimizda() {
   const { aboutContent } = useData();
 
   return (
     <main className="relative min-h-screen pt-32 pb-20 px-4">
+      <style jsx>{`
+        @keyframes logoSpin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        .logo-spin {
+          animation: logoSpin 10s linear infinite;
+        }
+      `}</style>
+      
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -32,7 +50,7 @@ export default function Hakkimizda() {
               alt="68 Riders"
               width={400}
               height={400}
-              className="w-full h-auto drop-shadow-[0_0_30px_rgba(255,0,51,0.5)]"
+              className="w-full h-auto drop-shadow-[0_0_30px_rgba(255,0,51,0.5)] logo-spin"
             />
           </motion.div>
 

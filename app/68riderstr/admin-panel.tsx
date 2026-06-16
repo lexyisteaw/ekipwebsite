@@ -546,7 +546,7 @@ function GalleryModal({ image, onSave, onClose }: any) {
   const [formData, setFormData] = useState(image || {
     title: "",
     url: "",
-    category: "events"
+    category: "gallery"
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState(image?.url || "");
@@ -631,19 +631,6 @@ function GalleryModal({ image, onSave, onClose }: any) {
             <p className="text-xs text-gray-500 mt-1">
               İsterseniz URL de girebilirsiniz
             </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold mb-2">Kategori</label>
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
-            >
-              <option value="events">Etkinlikler</option>
-              <option value="tours">Turlar</option>
-              <option value="members">Üyeler</option>
-            </select>
           </div>
 
           {previewUrl && (

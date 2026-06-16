@@ -1,0 +1,61 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "68 Riders Aksaray Motorsiklet Topluluğu",
+  "alternateName": [
+    "68riders",
+    "68 Riders",
+    "Aksaray 68",
+    "Aksaray Motor Ekibi"
+  ],
+  "url": "https://68riders.com",
+  "logo": "https://68riders.com/logo.png",
+  "image": "https://68riders.com/logo.png",
+  "description": "Aksaray'ın en köklü ve prestijli motorsiklet topluluğu. Motor tutkunlarının kardeşlik bağıyla bir araya geldiği özgürlük ve tutku platformu. Ride Beyond Limits!",
+  "slogan": "Ride Beyond Limits",
+  "foundingDate": "2020",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Aksaray",
+    "addressRegion": "Aksaray",
+    "postalCode": "68100",
+    "addressCountry": "TR"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": "38.3688",
+    "longitude": "34.0347"
+  },
+  "areaServed": {
+    "@type": "GeoCircle",
+    "geoMidpoint": {
+      "@type": "GeoCoordinates",
+      "latitude": "38.3688",
+      "longitude": "34.0347"
+    },
+    "geoRadius": "100000"
+  },
+  "sameAs": [
+    "https://instagram.com/68riders",
+    "https://facebook.com/68riders",
+    "https://twitter.com/68riders",
+    "https://www.youtube.com/@68riders"
+  ],
+  "knowsAbout": [
+    "Motorsiklet",
+    "Motor Sporları",
+    "Biker Kültürü",
+    "Motor Gezileri",
+    "Motor Etkinlikleri",
+    "Aksaray Turizmi"
+  ],
+  "memberOf": {
+    "@type": "Organization",
+    "name": "Türkiye Motorsiklet Toplulukları Federasyonu"
+  },
+  "subOrganization": {
+    "@type": "SportsOrganization",
+    "name": "68 Riders Motor Kulübü",
+    "sport": "Motorsiklet"
+  }
+}

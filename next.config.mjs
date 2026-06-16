@@ -1,8 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['images.unsplash.com', 'ui-avatars.com'],
+    domains: ['images.unsplash.com', 'ui-avatars.com', 'agdxfpuahvsecdihinak.supabase.co'],
+    formats: ['image/avif', 'image/webp'],
   },
+  compress: true,
+  poweredByHeader: false,
   async rewrites() {
     return [
       {
