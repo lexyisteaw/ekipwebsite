@@ -8,106 +8,45 @@ import { motion } from "framer-motion";
 export default function Home() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(true);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const [showHint, setShowHint] = useState(true);
 
   useEffect(() => {
-    // Video'yu başlat (sessiz)
-    if (videoRef.current) {
-      // Mobil için video yükleme optimizasyonu
-      videoRef.current.load();
-      
-      // Video hazır olduğunda oynat
-      const playVideo = () => {
-        if (videoRef.current) {
-          videoRef.current.play().catch(err => {
-            console.log("Video autoplay error:", err);
-            // Hata olursa tekrar dene
-            setTimeout(() => {
-              if (videoRef.current) {
-                videoRef.current.play().catch(() => {});
-              }
-            }, 100);
-          });
-        }
-      };
+    const video = videoRef.current;
+    if (!video) return;
 
-      // Video yüklendiğinde oynat
-      if (videoRef.current.readyState >= 3) {
-        playVideo();
-      } else {
-        videoRef.current.addEventListener('loadeddata', playVideo, { once: true });
-      }
-    }
+    video.play().catch(() => {
+      // Tarayıcı otomatik oynatmayı engellerse kullanıcı ses butonuyla başlatabilir.
+    });
 
-    // Kullanıcı ilk etkileşiminde sesi aç
-    const handleFirstInteraction = () => {
-      if (!hasInteracted && videoRef.current) {
-        // Mobil için: önce play, sonra unmute
-        videoRef.current.play().then(() => {
-          if (videoRef.current) {
-            videoRef.current.muted = false;
-            videoRef.current.volume = 1.0;
-            setIsMuted(false);
-            setHasInteracted(true);
-          }
-        }).catch(err => {
-          console.log("Audio play error:", err);
-          // Hata olursa sadece muted'ı kaldır
-          if (videoRef.current) {
-            videoRef.current.muted = false;
-            setIsMuted(false);
-            setHasInteracted(true);
-          }
-        });
-      }
-    };
+    const timer = window.setTimeout(() => setShowHint(false), 3500);
+    return () => window.clearTimeout(timer);
+  }, []);
 
-    // Tüm etkileşim olaylarını dinle
-    document.addEventListener('click', handleFirstInteraction, { once: false });
-    document.addEventListener('touchstart', handleFirstInteraction, { once: false });
-    document.addEventListener('touchend', handleFirstInteraction, { once: false });
-    document.addEventListener('keydown', handleFirstInteraction, { once: false });
+  const toggleMute = (event: React.MouseEvent | React.TouchEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
 
-    return () => {
-      document.removeEventListener('click', handleFirstInteraction);
-      document.removeEventListener('touchstart', handleFirstInteraction);
-      document.removeEventListener('touchend', handleFirstInteraction);
-      document.removeEventListener('keydown', handleFirstInteraction);
-    };
-  }, [hasInteracted]);
+    const video = videoRef.current;
+    if (!video) return;
 
-  const toggleMute = (e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    
-    if (videoRef.current) {
-      const newMutedState = !isMuted;
-      
-      // Mobil için: play'i tekrar tetikle
-      videoRef.current.play().then(() => {
-        if (videoRef.current) {
-          videoRef.current.muted = newMutedState;
-          videoRef.current.volume = newMutedState ? 0 : 1.0;
-          setIsMuted(newMutedState);
-          setHasInteracted(true);
-        }
-      }).catch(() => {
-        // Fallback
-        if (videoRef.current) {
-          videoRef.current.muted = newMutedState;
-          setIsMuted(newMutedState);
-          setHasInteracted(true);
-        }
+    const nextMuted = !isMuted;
+
+    video
+      .play()
+      .catch(() => null)
+      .finally(() => {
+        video.muted = nextMuted;
+        video.volume = nextMuted ? 0 : 1;
+        setIsMuted(nextMuted);
+        setShowHint(false);
       });
-    }
   };
 
   return (
     <main className="fixed inset-0 w-full h-full overflow-hidden bg-dark">
       <LoadingScreen />
-      
-      {/* Video Container - Ortalanmış */}
-      <div className="absolute inset-0 flex items-center justify-center bg-dark overflow-hidden">
+
+      <div className="absolute inset-0 flex items-center justify-center bg-dark overflow-hidden pointer-events-none">
         <video
           ref={videoRef}
           autoPlay
@@ -115,7 +54,7 @@ export default function Home() {
           muted
           playsInline
           controls={false}
-          preload="metadata"
+          preload="auto"
           webkit-playsinline="true"
           x5-playsinline="true"
           x-webkit-airplay="allow"
@@ -125,8 +64,7 @@ export default function Home() {
         </video>
       </div>
 
-      {/* İlk Etkileşim Uyarısı */}
-      {!hasInteracted && (
+      {showHint && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -140,13 +78,12 @@ export default function Home() {
           >
             <p className="text-white font-bold tracking-wider flex items-center justify-center gap-3 text-sm md:text-base">
               <Volume2 size={24} className="text-primary flex-shrink-0" />
-              <span>Sesi açmak için herhangi bir yere dokunun</span>
+              <span>Sesi açmak için sağ alttaki butonu kullanın</span>
             </p>
           </motion.div>
         </motion.div>
       )}
 
-      {/* Ses Kontrol Butonu - Sağ Alt Köşe */}
       <motion.button
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
