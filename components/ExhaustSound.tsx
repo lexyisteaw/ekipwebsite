@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 export default function ExhaustSound() {
   const mediaRef = useRef<HTMLVideoElement>(null);
+  const pathname = usePathname();
+  const isAdminRoute =
+    pathname?.startsWith("/68riderstr") ||
+    pathname?.startsWith("/yonetim-68riders-burak2026");
 
   useEffect(() => {
+    if (isAdminRoute) return;
+
     const media = mediaRef.current;
     if (!media) return;
 
@@ -37,7 +44,11 @@ export default function ExhaustSound() {
       document.removeEventListener("keydown", startSound);
       document.removeEventListener("touchstart", startSound);
     };
-  }, []);
+  }, [isAdminRoute]);
+
+  if (isAdminRoute) {
+    return null;
+  }
 
   return (
     <>

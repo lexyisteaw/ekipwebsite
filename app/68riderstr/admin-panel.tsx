@@ -20,6 +20,11 @@ import {
 } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return "Islem tamamlanamadi. Supabase tablo kurulumunu kontrol edin.";
+}
+
 // Event Modal Component
 function EventModal({ event, onSave, onClose }: any) {
   const [formData, setFormData] = useState(event || {
@@ -1299,23 +1304,31 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
   };
 
   // Üye yönetimi fonksiyonları
-  const handleDeleteMember = (id: number) => {
-    if (confirm("Bu üyeyi silmek istediğinize emin misiniz?")) {
-      deleteMemberFromContext(id);
-      alert("Üye silindi!");
+  const handleDeleteMember = async (id: number) => {
+    if (confirm("Bu uyeyi silmek istediginize emin misiniz?")) {
+      try {
+        await deleteMemberFromContext(id);
+        alert("Uye silindi!");
+      } catch (error) {
+        alert(getErrorMessage(error));
+      }
     }
   };
 
-  const addOrUpdateMemberHandler = (memberData: any) => {
-    if (editingMember) {
-      updateMember(editingMember.id, memberData);
-      alert("Üye güncellendi!");
-    } else {
-      addMember(memberData);
-      alert("Yeni üye eklendi!");
+  const addOrUpdateMemberHandler = async (memberData: any) => {
+    try {
+      if (editingMember) {
+        await updateMember(editingMember.id, memberData);
+        alert("Uye guncellendi!");
+      } else {
+        await addMember(memberData);
+        alert("Yeni uye eklendi!");
+      }
+      setShowMemberModal(false);
+      setEditingMember(null);
+    } catch (error) {
+      alert(getErrorMessage(error));
     }
-    setShowMemberModal(false);
-    setEditingMember(null);
   };
 
   const openEditMember = (member: any) => {

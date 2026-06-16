@@ -118,6 +118,20 @@ const defaultSiteSettings: SiteSettings = {
   phone: "+90 5XX XXX XX XX",
 };
 
+function throwSupabaseError(action: string, error: unknown): never {
+  console.error(`${action}:`, error);
+
+  if (error instanceof Error) {
+    throw new Error(`${action}: ${error.message}`);
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    throw new Error(`${action}: ${String((error as { message?: unknown }).message)}`);
+  }
+
+  throw new Error(action);
+}
+
 // Supabase'den gelen veriyi Member tipine çevir
 function mapMember(row: any): Member {
   return {
@@ -282,7 +296,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       total_events: member.totalEvents || 0,
       total_km: member.totalKm || 0,
     });
-    if (error) { console.error('Üye ekleme hatası:', error); return; }
+    if (error) throwSupabaseError('Uye ekleme hatasi', error);
     await loadMembers();
   };
 
@@ -307,13 +321,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       total_events: member.totalEvents || 0,
       total_km: member.totalKm || 0,
     }).eq('id', id);
-    if (error) { console.error('Üye güncelleme hatası:', error); return; }
+    if (error) throwSupabaseError('Uye guncelleme hatasi', error);
     await loadMembers();
   };
 
   const deleteMember = async (id: number) => {
     const { error } = await supabase.from('members').delete().eq('id', id);
-    if (error) { console.error('Üye silme hatası:', error); return; }
+    if (error) throwSupabaseError('Uye silme hatasi', error);
     await loadMembers();
   };
 

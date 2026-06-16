@@ -1,204 +1,154 @@
--- 🏍️ 68 RIDERS SUPABASE DATABASE SETUP
--- Bu SQL kodlarını Supabase SQL Editor'e yapıştırın ve RUN edin
+-- 68 RIDERS SUPABASE DATABASE SETUP
+-- Supabase > SQL Editor icine yapistirip Run calistirin.
+-- Bu dosya tekrar calistirilabilir; tablolar varsa silmez.
 
--- ========================================
--- 1. MEMBERS TABLOSU (Üyeler)
--- ========================================
-CREATE TABLE IF NOT EXISTS members (
-  id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  surname TEXT,
-  age INTEGER,
-  city TEXT,
-  blood_type TEXT,
-  bike TEXT,
-  bike_model TEXT,
-  instagram TEXT,
-  tiktok TEXT,
-  twitter TEXT,
-  telegram TEXT,
-  photo TEXT,
-  cover_image TEXT,
-  gallery TEXT[],
-  bio TEXT,
-  join_date TEXT,
-  total_events INTEGER DEFAULT 0,
-  total_km INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+create table if not exists public.members (
+  id bigserial primary key,
+  name text not null,
+  surname text,
+  age integer,
+  city text,
+  blood_type text,
+  bike text,
+  bike_model text,
+  instagram text,
+  tiktok text,
+  twitter text,
+  telegram text,
+  photo text,
+  cover_image text,
+  gallery text[] default '{}',
+  bio text,
+  join_date text,
+  total_events integer default 0,
+  total_km integer default 0,
+  created_at timestamp with time zone default now()
 );
 
--- RLS (Row Level Security) Politikaları
-ALTER TABLE members ENABLE ROW LEVEL SECURITY;
-
--- Herkes okuyabilir
-CREATE POLICY "Enable read access for all users" ON members
-  FOR SELECT USING (true);
-
--- Herkes yazabilir (admin kontrolü client tarafında)
-CREATE POLICY "Enable insert for all users" ON members
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Enable update for all users" ON members
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Enable delete for all users" ON members
-  FOR DELETE USING (true);
-
--- ========================================
--- 2. EVENTS TABLOSU (Etkinlikler)
--- ========================================
-CREATE TABLE IF NOT EXISTS events (
-  id BIGSERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  date TEXT NOT NULL,
-  location TEXT NOT NULL,
-  participants INTEGER DEFAULT 0,
-  distance TEXT,
-  status TEXT DEFAULT 'upcoming',
-  description TEXT,
-  image TEXT,
-  photos TEXT[],
-  route TEXT[],
-  highlights TEXT[],
-  recommendations TEXT[],
-  duration TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+create table if not exists public.events (
+  id bigserial primary key,
+  title text not null,
+  date text not null,
+  location text not null,
+  participants integer default 0,
+  distance text,
+  status text default 'upcoming',
+  description text,
+  image text,
+  photos text[] default '{}',
+  route text[] default '{}',
+  highlights text[] default '{}',
+  recommendations text[] default '{}',
+  duration text,
+  created_at timestamp with time zone default now()
 );
 
--- RLS Politikaları
-ALTER TABLE events ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Enable read access for all users" ON events
-  FOR SELECT USING (true);
-
-CREATE POLICY "Enable insert for all users" ON events
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Enable update for all users" ON events
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Enable delete for all users" ON events
-  FOR DELETE USING (true);
-
--- ========================================
--- 3. GALLERY_IMAGES TABLOSU (Galeri)
--- ========================================
-CREATE TABLE IF NOT EXISTS gallery_images (
-  id BIGSERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  url TEXT NOT NULL,
-  category TEXT DEFAULT 'events',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+create table if not exists public.gallery_images (
+  id bigserial primary key,
+  title text not null,
+  url text not null,
+  category text default 'events',
+  created_at timestamp with time zone default now()
 );
 
--- RLS Politikaları
-ALTER TABLE gallery_images ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Enable read access for all users" ON gallery_images
-  FOR SELECT USING (true);
-
-CREATE POLICY "Enable insert for all users" ON gallery_images
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Enable update for all users" ON gallery_images
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Enable delete for all users" ON gallery_images
-  FOR DELETE USING (true);
-
--- ========================================
--- 4. MESSAGES TABLOSU (İletişim Mesajları)
--- ========================================
-CREATE TABLE IF NOT EXISTS messages (
-  id BIGSERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  phone TEXT,
-  message TEXT NOT NULL,
-  status TEXT DEFAULT 'unread',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+create table if not exists public.messages (
+  id bigserial primary key,
+  name text not null,
+  email text not null,
+  phone text,
+  message text not null,
+  status text default 'unread',
+  created_at timestamp with time zone default now()
 );
 
--- RLS Politikaları
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Enable read access for all users" ON messages
-  FOR SELECT USING (true);
-
-CREATE POLICY "Enable insert for all users" ON messages
-  FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Enable update for all users" ON messages
-  FOR UPDATE USING (true);
-
-CREATE POLICY "Enable delete for all users" ON messages
-  FOR DELETE USING (true);
-
--- ========================================
--- 5. SITE_SETTINGS TABLOSU (Site Ayarları)
--- ========================================
-CREATE TABLE IF NOT EXISTS site_settings (
-  id BIGSERIAL PRIMARY KEY,
-  site_name TEXT DEFAULT '68 RIDERS',
-  site_tagline TEXT DEFAULT 'Ride Beyond Limits',
-  contact_email TEXT,
-  instagram TEXT,
-  phone TEXT,
-  about_description TEXT,
-  about_mission TEXT,
-  total_members INTEGER DEFAULT 68,
-  annual_events INTEGER DEFAULT 12,
-  total_km INTEGER DEFAULT 1000,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+create table if not exists public.site_settings (
+  id bigserial primary key,
+  site_name text default '68 RIDERS',
+  site_tagline text default 'Ride Beyond Limits',
+  contact_email text,
+  instagram text,
+  phone text,
+  about_description text,
+  about_mission text,
+  total_members integer default 68,
+  annual_events integer default 12,
+  total_km integer default 1000,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
 );
 
--- RLS Politikaları
-ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+alter table public.members enable row level security;
+alter table public.events enable row level security;
+alter table public.gallery_images enable row level security;
+alter table public.messages enable row level security;
+alter table public.site_settings enable row level security;
 
-CREATE POLICY "Enable read access for all users" ON site_settings
-  FOR SELECT USING (true);
+drop policy if exists "Enable read access for all users" on public.members;
+drop policy if exists "Enable insert for all users" on public.members;
+drop policy if exists "Enable update for all users" on public.members;
+drop policy if exists "Enable delete for all users" on public.members;
+create policy "Enable read access for all users" on public.members for select using (true);
+create policy "Enable insert for all users" on public.members for insert with check (true);
+create policy "Enable update for all users" on public.members for update using (true) with check (true);
+create policy "Enable delete for all users" on public.members for delete using (true);
 
-CREATE POLICY "Enable insert for all users" ON site_settings
-  FOR INSERT WITH CHECK (true);
+drop policy if exists "Enable read access for all users" on public.events;
+drop policy if exists "Enable insert for all users" on public.events;
+drop policy if exists "Enable update for all users" on public.events;
+drop policy if exists "Enable delete for all users" on public.events;
+create policy "Enable read access for all users" on public.events for select using (true);
+create policy "Enable insert for all users" on public.events for insert with check (true);
+create policy "Enable update for all users" on public.events for update using (true) with check (true);
+create policy "Enable delete for all users" on public.events for delete using (true);
 
-CREATE POLICY "Enable update for all users" ON site_settings
-  FOR UPDATE USING (true);
+drop policy if exists "Enable read access for all users" on public.gallery_images;
+drop policy if exists "Enable insert for all users" on public.gallery_images;
+drop policy if exists "Enable update for all users" on public.gallery_images;
+drop policy if exists "Enable delete for all users" on public.gallery_images;
+create policy "Enable read access for all users" on public.gallery_images for select using (true);
+create policy "Enable insert for all users" on public.gallery_images for insert with check (true);
+create policy "Enable update for all users" on public.gallery_images for update using (true) with check (true);
+create policy "Enable delete for all users" on public.gallery_images for delete using (true);
 
-CREATE POLICY "Enable delete for all users" ON site_settings
-  FOR DELETE USING (true);
+drop policy if exists "Enable read access for all users" on public.messages;
+drop policy if exists "Enable insert for all users" on public.messages;
+drop policy if exists "Enable update for all users" on public.messages;
+drop policy if exists "Enable delete for all users" on public.messages;
+create policy "Enable read access for all users" on public.messages for select using (true);
+create policy "Enable insert for all users" on public.messages for insert with check (true);
+create policy "Enable update for all users" on public.messages for update using (true) with check (true);
+create policy "Enable delete for all users" on public.messages for delete using (true);
 
--- ========================================
--- 6. BAŞLANGIÇ VERİLERİ (Default Data)
--- ========================================
+drop policy if exists "Enable read access for all users" on public.site_settings;
+drop policy if exists "Enable insert for all users" on public.site_settings;
+drop policy if exists "Enable update for all users" on public.site_settings;
+drop policy if exists "Enable delete for all users" on public.site_settings;
+create policy "Enable read access for all users" on public.site_settings for select using (true);
+create policy "Enable insert for all users" on public.site_settings for insert with check (true);
+create policy "Enable update for all users" on public.site_settings for update using (true) with check (true);
+create policy "Enable delete for all users" on public.site_settings for delete using (true);
 
--- Site ayarlarını ekle
-INSERT INTO site_settings (
-  site_name, 
-  site_tagline, 
-  contact_email, 
-  instagram, 
+insert into public.site_settings (
+  site_name,
+  site_tagline,
+  contact_email,
+  instagram,
   phone,
   about_description,
   about_mission,
   total_members,
   annual_events,
   total_km
-) VALUES (
+)
+select
   '68 RIDERS',
   'Ride Beyond Limits',
   '68Riders@protonmail.com',
   '@68_riders',
   '+90 5XX XXX XX XX',
-  '68 Riders, Aksaray''ın en köklü ve prestijli motorsiklet topluluğudur. Motor tutkunlarının kardeşlik bağıyla bir araya geldiği, özgürlüğün ve tutkunun adresidir.',
-  'Motosiklet tutkusunu paylaşan insanları bir araya getirmek, güvenli ve keyifli sürüşler yapmak, unutulmaz anılar biriktirmek ve Aksaray''ın motor kültürünü geliştirmektir.',
+  '68 Riders, Aksaray motosiklet tutkusunu paylasan suruculerin bulusma noktasidir.',
+  'Motosiklet tutkusunu paylasan insanlari bir araya getirmek ve guvenli surus kulturu olusturmak.',
   68,
   12,
   1000
-) ON CONFLICT (id) DO NOTHING;
-
--- ========================================
--- ✅ KURULUM TAMAMLANDI!
--- ========================================
--- Artık projeniz Supabase ile hazır!
--- .env.local dosyanıza API bilgilerini ekleyin.
+where not exists (select 1 from public.site_settings);
