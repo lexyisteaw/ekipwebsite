@@ -276,7 +276,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // ---- MEMBER FONKSİYONLARI ----
   const addMember = async (member: Omit<Member, 'id'>) => {
-    const { error } = await supabase.from('members').insert({
+    const { data, error } = await supabase.from('members').insert({
       name: member.name,
       surname: member.surname,
       age: member.age,
@@ -295,13 +295,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
       join_date: member.joinDate,
       total_events: member.totalEvents || 0,
       total_km: member.totalKm || 0,
-    });
+    }).select('*').single();
     if (error) throwSupabaseError('Uye ekleme hatasi', error);
-    await loadMembers();
+
+    if (data) {
+      const newMember = mapMember(data);
+      setMembers((current) => [...current.filter((item) => item.id !== newMember.id), newMember]);
+    } else {
+      await loadMembers();
+    }
   };
 
   const updateMember = async (id: number, member: Omit<Member, 'id'>) => {
-    const { error } = await supabase.from('members').update({
+    const { data, error } = await supabase.from('members').update({
       name: member.name,
       surname: member.surname,
       age: member.age,
@@ -320,15 +326,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
       join_date: member.joinDate,
       total_events: member.totalEvents || 0,
       total_km: member.totalKm || 0,
-    }).eq('id', id);
+    }).eq('id', id).select('*').single();
     if (error) throwSupabaseError('Uye guncelleme hatasi', error);
-    await loadMembers();
+
+    if (data) {
+      const updatedMember = mapMember(data);
+      setMembers((current) => current.map((item) => item.id === id ? updatedMember : item));
+    } else {
+      await loadMembers();
+    }
   };
 
   const deleteMember = async (id: number) => {
     const { error } = await supabase.from('members').delete().eq('id', id);
     if (error) throwSupabaseError('Uye silme hatasi', error);
-    await loadMembers();
+    setMembers((current) => current.filter((member) => member.id !== id));
   };
 
   // ---- EVENT FONKSİYONLARI ----

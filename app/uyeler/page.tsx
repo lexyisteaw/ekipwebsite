@@ -6,7 +6,7 @@ import { useData } from "@/contexts/DataContext";
 import { Instagram, Twitter, Send, MessageCircle } from "lucide-react";
 
 export default function Uyeler() {
-  const { members } = useData();
+  const { members, loading } = useData();
 
   return (
     <main className="relative min-h-screen pt-32 pb-20 px-4">
@@ -25,6 +25,13 @@ export default function Uyeler() {
           </p>
         </motion.div>
 
+        {loading && (
+          <div className="text-center py-20">
+            <p className="text-gray-400 text-xl">Uyeler yukleniyor...</p>
+          </div>
+        )}
+
+        {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {members.map((member, index) => (
             <motion.div
@@ -119,8 +126,9 @@ export default function Uyeler() {
             </motion.div>
           ))}
         </div>
+        )}
 
-        {members.length === 0 && (
+        {!loading && members.length === 0 && (
           <div className="text-center py-20">
             <p className="text-gray-400 text-xl">Henüz üye eklenmemiş.</p>
             <p className="text-gray-500 mt-2">Admin panelinden üye ekleyebilirsiniz.</p>

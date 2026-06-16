@@ -1192,6 +1192,7 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     members,
     aboutContent,
     siteSettings,
+    loading,
     addEvent,
     updateEvent,
     deleteEvent: deleteEventFromContext,
@@ -1691,6 +1692,13 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
                 </button>
               </div>
 
+              {loading && (
+                <div className="text-center py-16">
+                  <p className="text-gray-400 text-lg">Uyeler yukleniyor...</p>
+                </div>
+              )}
+
+              {!loading && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {members.map((member) => (
                   <div key={member.id} className="glass-panel p-4 rounded-xl">
@@ -1731,6 +1739,13 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
                   </div>
                 ))}
               </div>
+              )}
+
+              {!loading && members.length === 0 && (
+                <div className="glass-panel p-8 rounded-xl text-center">
+                  <p className="text-gray-400">Henuz uye yok. Yeni Uye butonuyla ekleyebilirsiniz.</p>
+                </div>
+              )}
             </div>
           )}
 
