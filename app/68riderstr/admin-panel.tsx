@@ -20,12 +20,14 @@ import {
   Store
 } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
-import { badgeOptions, MemberBadge, MemberMedia } from "@/components/MemberVisuals";
+import { badgeOptions, isVideoAsset, MemberBadge, MemberMedia } from "@/components/MemberVisuals";
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
   return "Islem tamamlanamadi. Supabase tablo kurulumunu kontrol edin.";
 }
+
+const MAX_SPONSOR_VIDEO_BYTES = 25 * 1024 * 1024;
 
 // Event Modal Component
 function EventModal({ event, onSave, onClose }: any) {
@@ -1307,6 +1309,48 @@ function SponsorModal({ sponsor, onSave, onClose }: any) {
     });
   };
 
+  const readVideoFile = (file: File) => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("Video okunamadi"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleVideoFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+
+    const selected = Array.from(files).slice(0, 4);
+    const acceptedFiles = selected.filter((file) => {
+      const isVideo = file.type.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
+      if (!isVideo) {
+        alert(`${file.name} video dosyasi degil.`);
+        return false;
+      }
+      if (file.size > MAX_SPONSOR_VIDEO_BYTES) {
+        alert(`${file.name} cok buyuk. Kankam 25 MB altinda kisa bir video sec.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (!acceptedFiles.length) {
+      e.currentTarget.value = "";
+      return;
+    }
+
+    try {
+      const uploadedVideos = await Promise.all(acceptedFiles.map(readVideoFile));
+      setFormData({ ...formData, videos: [...(formData.videos || []), ...uploadedVideos] });
+    } catch (error) {
+      alert(getErrorMessage(error));
+    } finally {
+      e.currentTarget.value = "";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSaving) return;
@@ -1415,16 +1459,31 @@ function SponsorModal({ sponsor, onSave, onClose }: any) {
           </div>
 
           <div className="border-t border-white/10 pt-4">
-            <h3 className="text-lg font-bold mb-4 text-primary">VIDEO LINKLERI</h3>
-            <div className="flex gap-2">
+            <h3 className="text-lg font-bold mb-4 text-primary">VIDEO LINKLERI / DOSYALARI</h3>
+            <input
+              type="file"
+              accept="video/mp4,video/webm,video/ogg,.mp4,.webm,.ogg,.mov"
+              multiple
+              onChange={handleVideoFilesChange}
+              className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white"
+            />
+            <p className="mt-2 text-xs text-gray-500">Kisa mp4/webm videolar secin. Cok buyuk videolar siteyi yavaslatmasin diye 25 MB ile sinirli.</p>
+            <div className="flex gap-2 mt-3">
               <input type="url" value={videoInput} onChange={(e) => setVideoInput(e.target.value)} className="flex-1 px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="YouTube, Instagram veya mp4 video linki" />
               <button type="button" onClick={() => { if (videoInput.trim()) { setFormData({ ...formData, videos: [...(formData.videos || []), videoInput.trim()] }); setVideoInput(""); } }} className="px-4 py-3 bg-primary rounded-lg font-bold">EKLE</button>
             </div>
             {formData.videos?.length > 0 && (
               <div className="mt-3 space-y-2">
                 {formData.videos.map((item: string, index: number) => (
-                  <div key={`${item}-${index}`} className="flex items-center justify-between rounded-lg bg-dark/40 px-3 py-2 text-sm">
-                    <span className="truncate">{item}</span>
+                  <div key={`${item}-${index}`} className="flex items-center justify-between gap-3 rounded-lg bg-dark/40 px-3 py-2 text-sm">
+                    <div className="min-w-0 flex flex-1 items-center gap-3">
+                      {isVideoAsset(item) ? (
+                        <video src={item} controls muted className="h-20 w-32 shrink-0 rounded-lg object-cover bg-black" />
+                      ) : (
+                        <div className="flex h-20 w-32 shrink-0 items-center justify-center rounded-lg bg-black/60 text-primary font-black">LINK</div>
+                      )}
+                      <span className="truncate">{item.startsWith("data:video/") ? `Bilgisayardan yuklenen video ${index + 1}` : item}</span>
+                    </div>
                     <button type="button" onClick={() => setFormData({ ...formData, videos: formData.videos.filter((_: string, i: number) => i !== index) })} className="text-primary font-bold">Sil</button>
                   </div>
                 ))}
