@@ -12,7 +12,7 @@ const syncopate = Syncopate({
   variable: "--font-syncopate",
 });
 
-const siteUrl = "https://68riders.com";
+const siteUrl = "https://68riders.com.tr";
 const siteName = "68 Riders";
 const defaultDescription =
   "68 Riders, Aksaray'da motosiklet tutkusunu paylaşan sürücülerin buluşma noktasıdır. Etkinlikler, geziler, üyeler ve kulüp haberleri.";

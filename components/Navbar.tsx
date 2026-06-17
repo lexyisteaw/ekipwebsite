@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import Image from "next/image";
-import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useState } from "react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -14,10 +14,13 @@ export default function Navbar() {
   const links = [
     { href: "/", label: "ANASAYFA" },
     { href: "/hakkimizda", label: "HAKKIMIZDA" },
-    { href: "/uyeler", label: "ÜYELER" },
-    { href: "/faaliyetler", label: "FAALİYETLER" },
-    { href: "/galeri", label: "GALERİ" },
-    { href: "/iletisim", label: "İLETİŞİM" },
+    { href: "/uyeler", label: "UYELER" },
+    { href: "/faaliyetler", label: "FAALIYETLER" },
+    { href: "/galeri", label: "GALERI" },
+    { href: "/magaza", label: "MAGAZA" },
+    { href: "/sponsorlar", label: "SPONSORLAR" },
+    { href: "/egitim", label: "EGITIM" },
+    { href: "/iletisim", label: "ILETISIM" },
   ];
 
   return (
@@ -29,7 +32,6 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <Image
               src="/logo.png"
@@ -37,19 +39,19 @@ export default function Navbar() {
               width={50}
               height={50}
               className="w-12 h-12 transition-transform group-hover:scale-110"
+              priority
             />
-            <span className="text-xl font-display font-bold hidden sm:block">
+            <span className="text-xl font-display font-bold hidden sm:block whitespace-nowrap">
               68 <span className="text-primary">RIDERS</span>
             </span>
           </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4 lg:gap-6">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm font-bold tracking-wider transition-colors relative group ${
+                className={`text-[11px] lg:text-sm font-bold tracking-wider transition-colors relative group whitespace-nowrap ${
                   pathname === link.href ? "text-primary" : "text-white hover:text-primary"
                 }`}
               >
@@ -63,17 +65,17 @@ export default function Navbar() {
             ))}
           </div>
 
-          {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden text-white p-2"
+            aria-label={mobileMenuOpen ? "Menuyu kapat" : "Menuyu ac"}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -81,7 +83,7 @@ export default function Navbar() {
           exit={{ opacity: 0, height: 0 }}
           className="md:hidden bg-dark/95 backdrop-blur-xl border-t border-white/10"
         >
-          <div className="px-4 py-6 space-y-4">
+          <div className="px-4 py-6 grid grid-cols-1 gap-4">
             {links.map((link) => (
               <Link
                 key={link.href}
