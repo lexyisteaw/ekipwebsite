@@ -17,7 +17,8 @@ import {
   Save,
   X,
   Shield,
-  Store
+  Store,
+  Newspaper
 } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { badgeOptions, isVideoAsset, MemberBadge, MemberMedia } from "@/components/MemberVisuals";
@@ -1510,6 +1511,244 @@ function SponsorModal({ sponsor, onSave, onClose }: any) {
   );
 }
 
+function NewsModal({ post, onSave, onClose }: any) {
+  const [formData, setFormData] = useState(post || {
+    title: "",
+    excerpt: "",
+    content: "",
+    author: "",
+    category: "Ekip ici",
+    image: "",
+    gallery: [],
+    videos: [],
+    featured: false,
+  });
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState(post?.image || "");
+  const [galleryInput, setGalleryInput] = useState("");
+  const [videoInput, setVideoInput] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const compressImageFile = (file: File, maxWidth: number, quality: number, callback: (value: string) => void) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    compressImageFile(file, 1000, 0.72, (value) => {
+      setCoverPreviewUrl(value);
+      setFormData({ ...formData, image: value });
+    });
+  };
+
+  const handleGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    const newGallery = [...(formData.gallery || [])];
+    let done = 0;
+    const selected = Array.from(files).slice(0, 10);
+
+    selected.forEach((file) => {
+      compressImageFile(file, 760, 0.64, (value) => {
+        newGallery.push(value);
+        done++;
+        if (done === selected.length) {
+          setFormData({ ...formData, gallery: newGallery });
+        }
+      });
+    });
+  };
+
+  const readVideoFile = (file: File) => {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error("Video okunamadi"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleVideoFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+
+    const selected = Array.from(files).slice(0, 4);
+    const acceptedFiles = selected.filter((file) => {
+      const isVideo = file.type.startsWith("video/") || /\.(mp4|webm|ogg|mov)$/i.test(file.name);
+      if (!isVideo) {
+        alert(`${file.name} video dosyasi degil.`);
+        return false;
+      }
+      if (file.size > MAX_SPONSOR_VIDEO_BYTES) {
+        alert(`${file.name} cok buyuk. 25 MB altinda kisa bir video sec.`);
+        return false;
+      }
+      return true;
+    });
+
+    if (!acceptedFiles.length) {
+      e.currentTarget.value = "";
+      return;
+    }
+
+    try {
+      const uploadedVideos = await Promise.all(acceptedFiles.map(readVideoFile));
+      setFormData({ ...formData, videos: [...(formData.videos || []), ...uploadedVideos] });
+    } catch (error) {
+      alert(getErrorMessage(error));
+    } finally {
+      e.currentTarget.value = "";
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark/90 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-panel p-8 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-display font-bold">{post ? "HABER DUZENLE" : "YENI HABER EKLE"}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">Haber Basligi *</label>
+              <input required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Orn: Burak startta yine sahnede" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">Kategori</label>
+              <input value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Ekip ici, etkinlik, saka..." />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">Kisa Ozet</label>
+            <input value={formData.excerpt} onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Kartta gorunecek kisa cumle" />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">Haberi Yazan</label>
+              <input value={formData.author} onChange={(e) => setFormData({ ...formData, author: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Orn: 68 Riders Haber Merkezi" />
+            </div>
+            <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-dark/40 p-4 mt-7">
+              <input type="checkbox" checked={formData.featured} onChange={(e) => setFormData({ ...formData, featured: e.target.checked })} />
+              <span className="font-bold">One cikan haber yap</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">Haber Metni</label>
+            <textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} rows={6} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none resize-none" placeholder="Olayi komik ama kimseyi kirmadan anlat..." />
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="text-lg font-bold mb-4 text-primary">KAPAK GORSELI</h3>
+            <input type="file" accept="image/*" onChange={handleCoverFileChange} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white" />
+            <input type="url" value={formData.image?.startsWith("data:") ? "" : formData.image} onChange={(e) => { setFormData({ ...formData, image: e.target.value }); setCoverPreviewUrl(e.target.value); }} className="w-full mt-3 px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Veya kapak gorseli URL" />
+            {coverPreviewUrl && <MemberMedia src={coverPreviewUrl} fallback={coverPreviewUrl} alt="Haber kapak" className="w-full h-56 object-cover rounded-lg mt-4" />}
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="text-lg font-bold mb-4 text-primary">FOTO GALERI</h3>
+            <input type="file" accept="image/*" multiple onChange={handleGalleryFilesChange} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white" />
+            <div className="flex gap-2 mt-3">
+              <input type="url" value={galleryInput} onChange={(e) => setGalleryInput(e.target.value)} className="flex-1 px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Veya foto URL ekle" />
+              <button type="button" onClick={() => { if (galleryInput.trim()) { setFormData({ ...formData, gallery: [...(formData.gallery || []), galleryInput.trim()] }); setGalleryInput(""); } }} className="px-4 py-3 bg-primary rounded-lg font-bold">EKLE</button>
+            </div>
+            {formData.gallery?.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 mt-4">
+                {formData.gallery.map((item: string, index: number) => (
+                  <div key={`${item}-${index}`} className="relative group">
+                    <MemberMedia src={item} fallback={item} alt={`Haber gorsel ${index + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                    <button type="button" onClick={() => setFormData({ ...formData, gallery: formData.gallery.filter((_: string, i: number) => i !== index) })} className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="text-lg font-bold mb-4 text-primary">VIDEO</h3>
+            <input type="file" accept="video/mp4,video/webm,video/ogg,.mp4,.webm,.ogg,.mov" multiple onChange={handleVideoFilesChange} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white" />
+            <p className="mt-2 text-xs text-gray-500">Kisa videolar secin. Buyuk videolar siteyi yavaslatmasin diye 25 MB ile sinirli.</p>
+            <div className="flex gap-2 mt-3">
+              <input type="url" value={videoInput} onChange={(e) => setVideoInput(e.target.value)} className="flex-1 px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="YouTube, Instagram veya mp4 video linki" />
+              <button type="button" onClick={() => { if (videoInput.trim()) { setFormData({ ...formData, videos: [...(formData.videos || []), videoInput.trim()] }); setVideoInput(""); } }} className="px-4 py-3 bg-primary rounded-lg font-bold">EKLE</button>
+            </div>
+            {formData.videos?.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {formData.videos.map((item: string, index: number) => (
+                  <div key={`${item}-${index}`} className="flex items-center justify-between gap-3 rounded-lg bg-dark/40 px-3 py-2 text-sm">
+                    <div className="min-w-0 flex flex-1 items-center gap-3">
+                      {isVideoAsset(item) ? (
+                        <video src={item} controls muted className="h-20 w-32 shrink-0 rounded-lg object-cover bg-black" />
+                      ) : (
+                        <div className="flex h-20 w-32 shrink-0 items-center justify-center rounded-lg bg-black/60 text-primary font-black">LINK</div>
+                      )}
+                      <span className="truncate">{item.startsWith("data:video/") ? `Bilgisayardan yuklenen video ${index + 1}` : item}</span>
+                    </div>
+                    <button type="button" onClick={() => setFormData({ ...formData, videos: formData.videos.filter((_: string, i: number) => i !== index) })} className="text-primary font-bold">Sil</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <button type="submit" disabled={isSaving} className="flex-1 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors disabled:opacity-60">
+              {isSaving ? "KAYDEDILIYOR..." : "KAYDET"}
+            </button>
+            <button type="button" onClick={onClose} disabled={isSaving} className="px-6 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-60">
+              IPTAL
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
   const {
     events,
@@ -1517,6 +1756,7 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     messages,
     members,
     sponsors,
+    newsPosts,
     aboutContent,
     siteSettings,
     loading,
@@ -1534,21 +1774,26 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     addSponsor,
     updateSponsor,
     deleteSponsor: deleteSponsorFromContext,
+    addNewsPost,
+    updateNewsPost,
+    deleteNewsPost: deleteNewsPostFromContext,
     updateAboutContent,
     updateSiteSettings,
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "events" | "gallery" | "messages" | "members" | "sponsors" | "about" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "events" | "gallery" | "messages" | "members" | "sponsors" | "news" | "about" | "settings">("dashboard");
   
   // Modal states
   const [showEventModal, setShowEventModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [showSponsorModal, setShowSponsorModal] = useState(false);
+  const [showNewsModal, setShowNewsModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [editingImage, setEditingImage] = useState<any>(null);
   const [editingMember, setEditingMember] = useState<any>(null);
   const [editingSponsor, setEditingSponsor] = useState<any>(null);
+  const [editingNewsPost, setEditingNewsPost] = useState<any>(null);
 
   // Local editing states
   const [localAboutContent, setLocalAboutContent] = useState(aboutContent);
@@ -1560,6 +1805,7 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     totalMembers: members.length,
     totalPhotos: galleryImages.length,
     totalSponsors: sponsors.length,
+    totalNews: newsPosts.length,
     pendingMessages: messages.filter(m => m.status === "unread").length
   };
 
@@ -1722,6 +1968,43 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     setShowSponsorModal(true);
   };
 
+  const handleDeleteNewsPost = async (id: number) => {
+    if (confirm("Bu haberi silmek istediginize emin misiniz?")) {
+      try {
+        await deleteNewsPostFromContext(id);
+        alert("Haber silindi!");
+      } catch (error) {
+        alert(getErrorMessage(error));
+      }
+    }
+  };
+
+  const addOrUpdateNewsPostHandler = async (postData: any) => {
+    try {
+      if (editingNewsPost) {
+        await updateNewsPost(editingNewsPost.id, postData);
+        alert("Haber guncellendi!");
+      } else {
+        await addNewsPost(postData);
+        alert("Yeni haber eklendi!");
+      }
+      setShowNewsModal(false);
+      setEditingNewsPost(null);
+    } catch (error) {
+      alert(getErrorMessage(error));
+    }
+  };
+
+  const openEditNewsPost = (post: any) => {
+    setEditingNewsPost(post);
+    setShowNewsModal(true);
+  };
+
+  const openAddNewsPost = () => {
+    setEditingNewsPost(null);
+    setShowNewsModal(true);
+  };
+
   return (
     <main className="relative min-h-screen pt-32 pb-20 px-4">
       <div className="max-w-7xl mx-auto">
@@ -1756,6 +2039,9 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
 
         {/* Sponsor Modal */}
         {showSponsorModal && <SponsorModal sponsor={editingSponsor} onSave={addOrUpdateSponsorHandler} onClose={() => { setShowSponsorModal(false); setEditingSponsor(null); }} />}
+
+        {/* Haber Modal */}
+        {showNewsModal && <NewsModal post={editingNewsPost} onSave={addOrUpdateNewsPostHandler} onClose={() => { setShowNewsModal(false); setEditingNewsPost(null); }} />}
 
         {/* Navigation Tabs */}
         <div className="flex gap-3 mb-8 flex-wrap">
@@ -1817,6 +2103,15 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
           >
             <Store size={18} />
             SPONSORLAR
+          </button>
+          <button
+            onClick={() => setActiveTab("news")}
+            className={`px-5 py-3 font-bold rounded-lg transition-colors flex items-center gap-2 ${
+              activeTab === "news" ? "bg-primary text-white" : "glass-panel hover:bg-white/10"
+            }`}
+          >
+            <Newspaper size={18} />
+            HABERLER
           </button>
           <button
             onClick={() => setActiveTab("about")}
@@ -2202,6 +2497,81 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
               {!loading && sponsors.length === 0 && (
                 <div className="glass-panel p-8 rounded-xl text-center">
                   <p className="text-gray-400">Henuz sponsor yok. Yeni Sponsor butonuyla ekleyebilirsiniz.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "news" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-display font-bold">HABER YONETIMI</h2>
+                <button
+                  onClick={openAddNewsPost}
+                  className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors flex items-center gap-2"
+                >
+                  <Plus size={20} />
+                  YENI HABER
+                </button>
+              </div>
+
+              {loading && (
+                <div className="text-center py-16">
+                  <p className="text-gray-400 text-lg">Haberler yukleniyor...</p>
+                </div>
+              )}
+
+              {!loading && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {newsPosts.map((post) => (
+                    <div key={post.id} className="glass-panel p-4 rounded-xl">
+                      <MemberMedia
+                        src={post.image || post.gallery?.[0] || "/logo.png"}
+                        fallback="/logo.png"
+                        alt={post.title}
+                        className="w-full h-48 object-cover rounded-lg mb-4 bg-dark/60"
+                      />
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-lg">{post.title}</h3>
+                            {post.featured && <span className="text-xs bg-primary px-2 py-1 rounded-full">ONE CIKAN</span>}
+                          </div>
+                          <p className="text-xs text-primary font-bold">{post.category || "Haber"}</p>
+                          <p className="text-xs text-gray-500 mt-1">{post.date}</p>
+                        </div>
+                        {post.excerpt && (
+                          <p className="text-sm text-gray-300 bg-dark/40 rounded-lg p-3 line-clamp-3">{post.excerpt}</p>
+                        )}
+                        <div className="flex gap-2 text-xs text-gray-500">
+                          <span>{post.gallery?.length || 0} foto</span>
+                          <span>{post.videos?.length || 0} video</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditNewsPost(post)}
+                            className="flex-1 px-3 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          >
+                            <Edit size={14} className="inline mr-1" />
+                            Duzenle
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNewsPost(post.id)}
+                            className="flex-1 px-3 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                          >
+                            <Trash2 size={14} className="inline mr-1" />
+                            Sil
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!loading && newsPosts.length === 0 && (
+                <div className="glass-panel p-8 rounded-xl text-center">
+                  <p className="text-gray-400">Henuz haber yok. Yeni Haber butonuyla ekip ici haber ekleyebilirsiniz.</p>
                 </div>
               )}
             </div>

@@ -82,6 +82,20 @@ export interface Sponsor {
   featured?: boolean;
 }
 
+export interface NewsPost {
+  id: number;
+  title: string;
+  excerpt?: string;
+  content?: string;
+  author?: string;
+  category?: string;
+  image?: string;
+  gallery?: string[];
+  videos?: string[];
+  featured?: boolean;
+  date?: string;
+}
+
 export interface AboutContent {
   description: string;
   mission: string;
@@ -104,6 +118,7 @@ interface DataContextType {
   messages: Message[];
   members: Member[];
   sponsors: Sponsor[];
+  newsPosts: NewsPost[];
   aboutContent: AboutContent;
   siteSettings: SiteSettings;
   loading: boolean;
@@ -122,6 +137,9 @@ interface DataContextType {
   addSponsor: (sponsor: Omit<Sponsor, 'id'>) => Promise<void>;
   updateSponsor: (id: number, sponsor: Omit<Sponsor, 'id'>) => Promise<void>;
   deleteSponsor: (id: number) => Promise<void>;
+  addNewsPost: (post: Omit<NewsPost, 'id'>) => Promise<void>;
+  updateNewsPost: (id: number, post: Omit<NewsPost, 'id'>) => Promise<void>;
+  deleteNewsPost: (id: number) => Promise<void>;
   updateAboutContent: (content: AboutContent) => Promise<void>;
   updateSiteSettings: (settings: SiteSettings) => Promise<void>;
 }
@@ -250,12 +268,29 @@ function mapSponsor(row: any): Sponsor {
   };
 }
 
+function mapNewsPost(row: any): NewsPost {
+  return {
+    id: row.id,
+    title: row.title,
+    excerpt: row.excerpt,
+    content: row.content,
+    author: row.author,
+    category: row.category,
+    image: row.image,
+    gallery: row.gallery || [],
+    videos: row.videos || [],
+    featured: row.featured,
+    date: row.created_at ? new Date(row.created_at).toLocaleDateString('tr-TR') : undefined,
+  };
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
+  const [newsPosts, setNewsPosts] = useState<NewsPost[]>([]);
   const [aboutContent, setAboutContent] = useState<AboutContent>(defaultAboutContent);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [loading, setLoading] = useState(true);
@@ -274,6 +309,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loadGalleryImages(),
         loadMessages(),
         loadSponsors(),
+        loadNewsPosts(),
         loadSiteSettings(),
       ]);
     } catch (error) {
@@ -311,6 +347,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.from('sponsors').select('*').order('id', { ascending: false });
     if (error) { console.error('Sponsors yukleme hatasi:', error); return; }
     setSponsors((data || []).map(mapSponsor));
+  }
+
+  async function loadNewsPosts() {
+    const { data, error } = await supabase.from('news_posts').select('*').order('id', { ascending: false });
+    if (error) { console.error('Haber yukleme hatasi:', error); return; }
+    setNewsPosts((data || []).map(mapNewsPost));
   }
 
   async function loadSiteSettings() {
@@ -470,6 +512,56 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setSponsors((current) => current.filter((sponsor) => sponsor.id !== id));
   };
 
+  const addNewsPost = async (post: Omit<NewsPost, 'id'>) => {
+    const { data, error } = await supabase.from('news_posts').insert({
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content,
+      author: post.author,
+      category: post.category,
+      image: post.image,
+      gallery: post.gallery || [],
+      videos: post.videos || [],
+      featured: post.featured || false,
+    }).select('*').single();
+    if (error) throwSupabaseError('Haber ekleme hatasi', error);
+
+    if (data) {
+      const newPost = mapNewsPost(data);
+      setNewsPosts((current) => [newPost, ...current.filter((item) => item.id !== newPost.id)]);
+    } else {
+      await loadNewsPosts();
+    }
+  };
+
+  const updateNewsPost = async (id: number, post: Omit<NewsPost, 'id'>) => {
+    const { data, error } = await supabase.from('news_posts').update({
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content,
+      author: post.author,
+      category: post.category,
+      image: post.image,
+      gallery: post.gallery || [],
+      videos: post.videos || [],
+      featured: post.featured || false,
+    }).eq('id', id).select('*').single();
+    if (error) throwSupabaseError('Haber guncelleme hatasi', error);
+
+    if (data) {
+      const updatedPost = mapNewsPost(data);
+      setNewsPosts((current) => current.map((item) => item.id === id ? updatedPost : item));
+    } else {
+      await loadNewsPosts();
+    }
+  };
+
+  const deleteNewsPost = async (id: number) => {
+    const { error } = await supabase.from('news_posts').delete().eq('id', id);
+    if (error) throwSupabaseError('Haber silme hatasi', error);
+    setNewsPosts((current) => current.filter((post) => post.id !== id));
+  };
+
   const addEvent = async (event: Omit<Event, 'id'>) => {
     const { error } = await supabase.from('events').insert({
       title: event.title,
@@ -621,6 +713,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         messages,
         members,
         sponsors,
+        newsPosts,
         aboutContent,
         siteSettings,
         loading,
@@ -639,6 +732,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addSponsor,
         updateSponsor,
         deleteSponsor,
+        addNewsPost,
+        updateNewsPost,
+        deleteNewsPost,
         updateAboutContent,
         updateSiteSettings,
       }}

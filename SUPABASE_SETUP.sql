@@ -78,6 +78,20 @@ create table if not exists public.sponsors (
   created_at timestamp with time zone default now()
 );
 
+create table if not exists public.news_posts (
+  id bigserial primary key,
+  title text not null,
+  excerpt text,
+  content text,
+  author text,
+  category text default 'Ekip ici',
+  image text,
+  gallery text[] default '{}',
+  videos text[] default '{}',
+  featured boolean default false,
+  created_at timestamp with time zone default now()
+);
+
 create table if not exists public.messages (
   id bigserial primary key,
   name text not null,
@@ -108,6 +122,7 @@ alter table public.members enable row level security;
 alter table public.events enable row level security;
 alter table public.gallery_images enable row level security;
 alter table public.sponsors enable row level security;
+alter table public.news_posts enable row level security;
 alter table public.messages enable row level security;
 alter table public.site_settings enable row level security;
 
@@ -146,6 +161,15 @@ create policy "Enable read access for all users" on public.sponsors for select u
 create policy "Enable insert for all users" on public.sponsors for insert with check (true);
 create policy "Enable update for all users" on public.sponsors for update using (true) with check (true);
 create policy "Enable delete for all users" on public.sponsors for delete using (true);
+
+drop policy if exists "Enable read access for all users" on public.news_posts;
+drop policy if exists "Enable insert for all users" on public.news_posts;
+drop policy if exists "Enable update for all users" on public.news_posts;
+drop policy if exists "Enable delete for all users" on public.news_posts;
+create policy "Enable read access for all users" on public.news_posts for select using (true);
+create policy "Enable insert for all users" on public.news_posts for insert with check (true);
+create policy "Enable update for all users" on public.news_posts for update using (true) with check (true);
+create policy "Enable delete for all users" on public.news_posts for delete using (true);
 
 drop policy if exists "Enable read access for all users" on public.messages;
 drop policy if exists "Enable insert for all users" on public.messages;

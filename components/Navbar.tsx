@@ -17,6 +17,7 @@ export default function Navbar() {
     { href: "/uyeler", label: "UYELER" },
     { href: "/faaliyetler", label: "FAALIYETLER" },
     { href: "/galeri", label: "GALERI" },
+    { href: "/haberler", label: "HABER" },
     { href: "/magaza", label: "MAGAZA" },
     { href: "/sponsorlar", label: "SPONSORLAR" },
     { href: "/egitim", label: "EGITIM" },

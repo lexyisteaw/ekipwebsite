@@ -20,7 +20,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/yonetim-68riders-burak2026/', '/68riderstr/', '/api/'],
       },
     ],
-    sitemap: 'https://68riders.com/sitemap.xml',
-    host: 'https://68riders.com',
+    sitemap: 'https://68riders.com.tr/sitemap.xml',
+    host: 'https://68riders.com.tr',
   }
 }
