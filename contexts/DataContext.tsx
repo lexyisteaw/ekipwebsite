@@ -96,6 +96,15 @@ export interface NewsPost {
   date?: string;
 }
 
+export interface Announcement {
+  id: number;
+  text: string;
+  link?: string;
+  isActive?: boolean;
+  priority?: number;
+  createdAt?: string;
+}
+
 export interface AboutContent {
   description: string;
   mission: string;
@@ -119,6 +128,7 @@ interface DataContextType {
   members: Member[];
   sponsors: Sponsor[];
   newsPosts: NewsPost[];
+  announcements: Announcement[];
   aboutContent: AboutContent;
   siteSettings: SiteSettings;
   loading: boolean;
@@ -140,6 +150,9 @@ interface DataContextType {
   addNewsPost: (post: Omit<NewsPost, 'id'>) => Promise<void>;
   updateNewsPost: (id: number, post: Omit<NewsPost, 'id'>) => Promise<void>;
   deleteNewsPost: (id: number) => Promise<void>;
+  addAnnouncement: (announcement: Omit<Announcement, 'id'>) => Promise<void>;
+  updateAnnouncement: (id: number, announcement: Omit<Announcement, 'id'>) => Promise<void>;
+  deleteAnnouncement: (id: number) => Promise<void>;
   updateAboutContent: (content: AboutContent) => Promise<void>;
   updateSiteSettings: (settings: SiteSettings) => Promise<void>;
 }
@@ -284,6 +297,17 @@ function mapNewsPost(row: any): NewsPost {
   };
 }
 
+function mapAnnouncement(row: any): Announcement {
+  return {
+    id: row.id,
+    text: row.text,
+    link: row.link,
+    isActive: row.is_active,
+    priority: row.priority || 0,
+    createdAt: row.created_at,
+  };
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
@@ -291,6 +315,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [newsPosts, setNewsPosts] = useState<NewsPost[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [aboutContent, setAboutContent] = useState<AboutContent>(defaultAboutContent);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [loading, setLoading] = useState(true);
@@ -310,6 +335,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loadMessages(),
         loadSponsors(),
         loadNewsPosts(),
+        loadAnnouncements(),
         loadSiteSettings(),
       ]);
     } catch (error) {
@@ -353,6 +379,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.from('news_posts').select('*').order('id', { ascending: false });
     if (error) { console.error('Haber yukleme hatasi:', error); return; }
     setNewsPosts((data || []).map(mapNewsPost));
+  }
+
+  async function loadAnnouncements() {
+    const { data, error } = await supabase
+      .from('announcements')
+      .select('*')
+      .order('priority', { ascending: false })
+      .order('id', { ascending: false });
+    if (error) { console.error('Duyuru yukleme hatasi:', error); return; }
+    setAnnouncements((data || []).map(mapAnnouncement));
   }
 
   async function loadSiteSettings() {
@@ -562,6 +598,46 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setNewsPosts((current) => current.filter((post) => post.id !== id));
   };
 
+  const addAnnouncement = async (announcement: Omit<Announcement, 'id'>) => {
+    const { data, error } = await supabase.from('announcements').insert({
+      text: announcement.text,
+      link: announcement.link,
+      is_active: announcement.isActive ?? true,
+      priority: announcement.priority || 0,
+    }).select('*').single();
+    if (error) throwSupabaseError('Duyuru ekleme hatasi', error);
+
+    if (data) {
+      const newAnnouncement = mapAnnouncement(data);
+      setAnnouncements((current) => [newAnnouncement, ...current.filter((item) => item.id !== newAnnouncement.id)]);
+    } else {
+      await loadAnnouncements();
+    }
+  };
+
+  const updateAnnouncement = async (id: number, announcement: Omit<Announcement, 'id'>) => {
+    const { data, error } = await supabase.from('announcements').update({
+      text: announcement.text,
+      link: announcement.link,
+      is_active: announcement.isActive ?? true,
+      priority: announcement.priority || 0,
+    }).eq('id', id).select('*').single();
+    if (error) throwSupabaseError('Duyuru guncelleme hatasi', error);
+
+    if (data) {
+      const updatedAnnouncement = mapAnnouncement(data);
+      setAnnouncements((current) => current.map((item) => item.id === id ? updatedAnnouncement : item));
+    } else {
+      await loadAnnouncements();
+    }
+  };
+
+  const deleteAnnouncement = async (id: number) => {
+    const { error } = await supabase.from('announcements').delete().eq('id', id);
+    if (error) throwSupabaseError('Duyuru silme hatasi', error);
+    setAnnouncements((current) => current.filter((announcement) => announcement.id !== id));
+  };
+
   const addEvent = async (event: Omit<Event, 'id'>) => {
     const { error } = await supabase.from('events').insert({
       title: event.title,
@@ -714,6 +790,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         members,
         sponsors,
         newsPosts,
+        announcements,
         aboutContent,
         siteSettings,
         loading,
@@ -735,6 +812,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addNewsPost,
         updateNewsPost,
         deleteNewsPost,
+        addAnnouncement,
+        updateAnnouncement,
+        deleteAnnouncement,
         updateAboutContent,
         updateSiteSettings,
       }}

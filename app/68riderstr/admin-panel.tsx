@@ -18,7 +18,8 @@ import {
   X,
   Shield,
   Store,
-  Newspaper
+  Newspaper,
+  Megaphone
 } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { badgeOptions, isVideoAsset, MemberBadge, MemberMedia } from "@/components/MemberVisuals";
@@ -1749,6 +1750,107 @@ function NewsModal({ post, onSave, onClose }: any) {
   );
 }
 
+function AnnouncementModal({ announcement, onSave, onClose }: any) {
+  const [formData, setFormData] = useState(announcement || {
+    text: "",
+    link: "",
+    isActive: true,
+    priority: 0,
+  });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave({
+        ...formData,
+        text: formData.text.trim(),
+        link: formData.link?.trim() || "",
+        priority: Number(formData.priority) || 0,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark/90 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-panel p-8 rounded-xl max-w-2xl w-full"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-display font-bold">{announcement ? "DUYURU DUZENLE" : "YENI DUYURU EKLE"}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-bold mb-2">Duyuru Yazisi *</label>
+            <textarea
+              required
+              value={formData.text}
+              onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+              rows={4}
+              className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none resize-none"
+              placeholder="Orn: Pazar gunu saat 10:00'da toplaniyoruz. Tum ekip davetlidir."
+            />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">Link</label>
+              <input
+                value={formData.link}
+                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
+                placeholder="/haberler veya https://..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">Oncelik</label>
+              <input
+                type="number"
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: Number(e.target.value) })}
+                className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-dark/40 p-4">
+            <input
+              type="checkbox"
+              checked={formData.isActive}
+              onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            />
+            <span className="font-bold">Sitede aktif goster</span>
+          </label>
+
+          <div className="rounded-lg border border-primary/30 bg-primary/10 p-4 text-sm text-gray-300">
+            Bu duyuru ana sayfada navbarin hemen altinda kayan bant olarak gorunur. Link verirsen tiklayan kisi o sayfaya gider.
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button type="submit" disabled={isSaving} className="flex-1 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors disabled:opacity-60">
+              {isSaving ? "KAYDEDILIYOR..." : "KAYDET"}
+            </button>
+            <button type="button" onClick={onClose} disabled={isSaving} className="px-6 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-60">
+              IPTAL
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
   const {
     events,
@@ -1757,6 +1859,7 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     members,
     sponsors,
     newsPosts,
+    announcements,
     aboutContent,
     siteSettings,
     loading,
@@ -1777,11 +1880,14 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     addNewsPost,
     updateNewsPost,
     deleteNewsPost: deleteNewsPostFromContext,
+    addAnnouncement,
+    updateAnnouncement,
+    deleteAnnouncement: deleteAnnouncementFromContext,
     updateAboutContent,
     updateSiteSettings,
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "events" | "gallery" | "messages" | "members" | "sponsors" | "news" | "about" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "events" | "gallery" | "messages" | "members" | "sponsors" | "news" | "announcements" | "about" | "settings">("dashboard");
   
   // Modal states
   const [showEventModal, setShowEventModal] = useState(false);
@@ -1789,11 +1895,13 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [showSponsorModal, setShowSponsorModal] = useState(false);
   const [showNewsModal, setShowNewsModal] = useState(false);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [editingImage, setEditingImage] = useState<any>(null);
   const [editingMember, setEditingMember] = useState<any>(null);
   const [editingSponsor, setEditingSponsor] = useState<any>(null);
   const [editingNewsPost, setEditingNewsPost] = useState<any>(null);
+  const [editingAnnouncement, setEditingAnnouncement] = useState<any>(null);
 
   // Local editing states
   const [localAboutContent, setLocalAboutContent] = useState(aboutContent);
@@ -1806,6 +1914,7 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     totalPhotos: galleryImages.length,
     totalSponsors: sponsors.length,
     totalNews: newsPosts.length,
+    totalAnnouncements: announcements.filter((item) => item.isActive !== false).length,
     pendingMessages: messages.filter(m => m.status === "unread").length
   };
 
@@ -2005,6 +2114,43 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     setShowNewsModal(true);
   };
 
+  const handleDeleteAnnouncement = async (id: number) => {
+    if (confirm("Bu duyuruyu silmek istediginize emin misiniz?")) {
+      try {
+        await deleteAnnouncementFromContext(id);
+        alert("Duyuru silindi!");
+      } catch (error) {
+        alert(getErrorMessage(error));
+      }
+    }
+  };
+
+  const addOrUpdateAnnouncementHandler = async (announcementData: any) => {
+    try {
+      if (editingAnnouncement) {
+        await updateAnnouncement(editingAnnouncement.id, announcementData);
+        alert("Duyuru guncellendi!");
+      } else {
+        await addAnnouncement(announcementData);
+        alert("Yeni duyuru eklendi!");
+      }
+      setShowAnnouncementModal(false);
+      setEditingAnnouncement(null);
+    } catch (error) {
+      alert(getErrorMessage(error));
+    }
+  };
+
+  const openEditAnnouncement = (announcement: any) => {
+    setEditingAnnouncement(announcement);
+    setShowAnnouncementModal(true);
+  };
+
+  const openAddAnnouncement = () => {
+    setEditingAnnouncement(null);
+    setShowAnnouncementModal(true);
+  };
+
   return (
     <main className="relative min-h-screen pt-32 pb-20 px-4">
       <div className="max-w-7xl mx-auto">
@@ -2042,6 +2188,9 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
 
         {/* Haber Modal */}
         {showNewsModal && <NewsModal post={editingNewsPost} onSave={addOrUpdateNewsPostHandler} onClose={() => { setShowNewsModal(false); setEditingNewsPost(null); }} />}
+
+        {/* Duyuru Modal */}
+        {showAnnouncementModal && <AnnouncementModal announcement={editingAnnouncement} onSave={addOrUpdateAnnouncementHandler} onClose={() => { setShowAnnouncementModal(false); setEditingAnnouncement(null); }} />}
 
         {/* Navigation Tabs */}
         <div className="flex gap-3 mb-8 flex-wrap">
@@ -2112,6 +2261,15 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
           >
             <Newspaper size={18} />
             HABERLER
+          </button>
+          <button
+            onClick={() => setActiveTab("announcements")}
+            className={`px-5 py-3 font-bold rounded-lg transition-colors flex items-center gap-2 ${
+              activeTab === "announcements" ? "bg-primary text-white" : "glass-panel hover:bg-white/10"
+            }`}
+          >
+            <Megaphone size={18} />
+            DUYURULAR
           </button>
           <button
             onClick={() => setActiveTab("about")}
@@ -2578,6 +2736,71 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
           )}
 
           {/* Hakkımızda */}
+          {activeTab === "announcements" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-display font-bold">DUYURU BANDI</h2>
+                  <p className="mt-2 text-sm text-gray-400">Ana sayfada ust kisimda kayan duyuru yazilarini buradan yonet.</p>
+                </div>
+                <button
+                  onClick={openAddAnnouncement}
+                  className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors flex items-center gap-2"
+                >
+                  <Plus size={20} />
+                  YENI DUYURU
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {announcements.map((announcement) => (
+                  <div key={announcement.id} className="glass-panel p-5 rounded-xl">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${announcement.isActive !== false ? "bg-green-600" : "bg-gray-600"}`}>
+                            {announcement.isActive !== false ? "AKTIF" : "PASIF"}
+                          </span>
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-dark/70 text-gray-300">
+                            ONCELIK {announcement.priority || 0}
+                          </span>
+                        </div>
+                        <p className="text-white font-bold leading-relaxed">{announcement.text}</p>
+                        {announcement.link && (
+                          <p className="mt-3 truncate text-sm text-primary">{announcement.link}</p>
+                        )}
+                      </div>
+                      <Megaphone className="shrink-0 text-primary" size={28} />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openEditAnnouncement(announcement)}
+                        className="flex-1 px-3 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      >
+                        <Edit size={14} className="inline mr-1" />
+                        Duzenle
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAnnouncement(announcement.id)}
+                        className="flex-1 px-3 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      >
+                        <Trash2 size={14} className="inline mr-1" />
+                        Sil
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {!loading && announcements.length === 0 && (
+                <div className="glass-panel p-8 rounded-xl text-center">
+                  <p className="text-gray-400">Henuz duyuru yok. Yeni Duyuru butonuyla ana sayfa bandina yazi ekleyebilirsiniz.</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {activeTab === "about" && (
             <div className="space-y-6">
               <h2 className="text-2xl font-display font-bold">HAKKIMIZDA İÇERİĞİ</h2>

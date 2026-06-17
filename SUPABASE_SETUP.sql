@@ -92,6 +92,15 @@ create table if not exists public.news_posts (
   created_at timestamp with time zone default now()
 );
 
+create table if not exists public.announcements (
+  id bigserial primary key,
+  text text not null,
+  link text,
+  is_active boolean default true,
+  priority integer default 0,
+  created_at timestamp with time zone default now()
+);
+
 create table if not exists public.messages (
   id bigserial primary key,
   name text not null,
@@ -123,6 +132,7 @@ alter table public.events enable row level security;
 alter table public.gallery_images enable row level security;
 alter table public.sponsors enable row level security;
 alter table public.news_posts enable row level security;
+alter table public.announcements enable row level security;
 alter table public.messages enable row level security;
 alter table public.site_settings enable row level security;
 
@@ -170,6 +180,15 @@ create policy "Enable read access for all users" on public.news_posts for select
 create policy "Enable insert for all users" on public.news_posts for insert with check (true);
 create policy "Enable update for all users" on public.news_posts for update using (true) with check (true);
 create policy "Enable delete for all users" on public.news_posts for delete using (true);
+
+drop policy if exists "Enable read access for all users" on public.announcements;
+drop policy if exists "Enable insert for all users" on public.announcements;
+drop policy if exists "Enable update for all users" on public.announcements;
+drop policy if exists "Enable delete for all users" on public.announcements;
+create policy "Enable read access for all users" on public.announcements for select using (true);
+create policy "Enable insert for all users" on public.announcements for insert with check (true);
+create policy "Enable update for all users" on public.announcements for update using (true) with check (true);
+create policy "Enable delete for all users" on public.announcements for delete using (true);
 
 drop policy if exists "Enable read access for all users" on public.messages;
 drop policy if exists "Enable insert for all users" on public.messages;
