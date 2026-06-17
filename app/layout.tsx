@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { DataProvider } from "@/contexts/DataContext";
 import ExhaustSound from "@/components/ExhaustSound";
+import InstallAppPrompt from "@/components/InstallAppPrompt";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const syncopate = Syncopate({
@@ -180,6 +181,7 @@ export default function RootLayout({
         <DataProvider>
           <Navbar />
           <ExhaustSound />
+          <InstallAppPrompt />
           {children}
         </DataProvider>
       </body>
