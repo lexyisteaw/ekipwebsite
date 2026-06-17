@@ -63,6 +63,25 @@ export interface Member {
   totalKm?: number;
 }
 
+export interface Sponsor {
+  id: number;
+  name: string;
+  category?: string;
+  description?: string;
+  workmanship?: string;
+  discountText?: string;
+  phone?: string;
+  instagram?: string;
+  website?: string;
+  mapsUrl?: string;
+  address?: string;
+  logo?: string;
+  coverImage?: string;
+  gallery?: string[];
+  videos?: string[];
+  featured?: boolean;
+}
+
 export interface AboutContent {
   description: string;
   mission: string;
@@ -84,6 +103,7 @@ interface DataContextType {
   galleryImages: GalleryImage[];
   messages: Message[];
   members: Member[];
+  sponsors: Sponsor[];
   aboutContent: AboutContent;
   siteSettings: SiteSettings;
   loading: boolean;
@@ -99,6 +119,9 @@ interface DataContextType {
   addMember: (member: Omit<Member, 'id'>) => Promise<void>;
   updateMember: (id: number, member: Omit<Member, 'id'>) => Promise<void>;
   deleteMember: (id: number) => Promise<void>;
+  addSponsor: (sponsor: Omit<Sponsor, 'id'>) => Promise<void>;
+  updateSponsor: (id: number, sponsor: Omit<Sponsor, 'id'>) => Promise<void>;
+  deleteSponsor: (id: number) => Promise<void>;
   updateAboutContent: (content: AboutContent) => Promise<void>;
   updateSiteSettings: (settings: SiteSettings) => Promise<void>;
 }
@@ -206,11 +229,33 @@ function mapMessage(row: any): Message {
   };
 }
 
+function mapSponsor(row: any): Sponsor {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    description: row.description,
+    workmanship: row.workmanship,
+    discountText: row.discount_text,
+    phone: row.phone,
+    instagram: row.instagram,
+    website: row.website,
+    mapsUrl: row.maps_url,
+    address: row.address,
+    logo: row.logo,
+    coverImage: row.cover_image,
+    gallery: row.gallery || [],
+    videos: row.videos || [],
+    featured: row.featured,
+  };
+}
+
 export function DataProvider({ children }: { children: ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [aboutContent, setAboutContent] = useState<AboutContent>(defaultAboutContent);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
   const [loading, setLoading] = useState(true);
@@ -228,6 +273,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loadEvents(),
         loadGalleryImages(),
         loadMessages(),
+        loadSponsors(),
         loadSiteSettings(),
       ]);
     } catch (error) {
@@ -259,6 +305,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
     if (error) { console.error('Messages yükleme hatası:', error); return; }
     setMessages((data || []).map(mapMessage));
+  }
+
+  async function loadSponsors() {
+    const { data, error } = await supabase.from('sponsors').select('*').order('id', { ascending: false });
+    if (error) { console.error('Sponsors yukleme hatasi:', error); return; }
+    setSponsors((data || []).map(mapSponsor));
   }
 
   async function loadSiteSettings() {
@@ -356,6 +408,68 @@ export function DataProvider({ children }: { children: ReactNode }) {
   };
 
   // ---- EVENT FONKSİYONLARI ----
+  const addSponsor = async (sponsor: Omit<Sponsor, 'id'>) => {
+    const { data, error } = await supabase.from('sponsors').insert({
+      name: sponsor.name,
+      category: sponsor.category,
+      description: sponsor.description,
+      workmanship: sponsor.workmanship,
+      discount_text: sponsor.discountText,
+      phone: sponsor.phone,
+      instagram: sponsor.instagram,
+      website: sponsor.website,
+      maps_url: sponsor.mapsUrl,
+      address: sponsor.address,
+      logo: sponsor.logo,
+      cover_image: sponsor.coverImage,
+      gallery: sponsor.gallery || [],
+      videos: sponsor.videos || [],
+      featured: sponsor.featured || false,
+    }).select('*').single();
+    if (error) throwSupabaseError('Sponsor ekleme hatasi', error);
+
+    if (data) {
+      const newSponsor = mapSponsor(data);
+      setSponsors((current) => [newSponsor, ...current.filter((item) => item.id !== newSponsor.id)]);
+    } else {
+      await loadSponsors();
+    }
+  };
+
+  const updateSponsor = async (id: number, sponsor: Omit<Sponsor, 'id'>) => {
+    const { data, error } = await supabase.from('sponsors').update({
+      name: sponsor.name,
+      category: sponsor.category,
+      description: sponsor.description,
+      workmanship: sponsor.workmanship,
+      discount_text: sponsor.discountText,
+      phone: sponsor.phone,
+      instagram: sponsor.instagram,
+      website: sponsor.website,
+      maps_url: sponsor.mapsUrl,
+      address: sponsor.address,
+      logo: sponsor.logo,
+      cover_image: sponsor.coverImage,
+      gallery: sponsor.gallery || [],
+      videos: sponsor.videos || [],
+      featured: sponsor.featured || false,
+    }).eq('id', id).select('*').single();
+    if (error) throwSupabaseError('Sponsor guncelleme hatasi', error);
+
+    if (data) {
+      const updatedSponsor = mapSponsor(data);
+      setSponsors((current) => current.map((item) => item.id === id ? updatedSponsor : item));
+    } else {
+      await loadSponsors();
+    }
+  };
+
+  const deleteSponsor = async (id: number) => {
+    const { error } = await supabase.from('sponsors').delete().eq('id', id);
+    if (error) throwSupabaseError('Sponsor silme hatasi', error);
+    setSponsors((current) => current.filter((sponsor) => sponsor.id !== id));
+  };
+
   const addEvent = async (event: Omit<Event, 'id'>) => {
     const { error } = await supabase.from('events').insert({
       title: event.title,
@@ -506,6 +620,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         galleryImages,
         messages,
         members,
+        sponsors,
         aboutContent,
         siteSettings,
         loading,
@@ -521,6 +636,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         addMember,
         updateMember,
         deleteMember,
+        addSponsor,
+        updateSponsor,
+        deleteSponsor,
         updateAboutContent,
         updateSiteSettings,
       }}

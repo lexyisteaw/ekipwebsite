@@ -58,6 +58,26 @@ create table if not exists public.gallery_images (
   created_at timestamp with time zone default now()
 );
 
+create table if not exists public.sponsors (
+  id bigserial primary key,
+  name text not null,
+  category text,
+  description text,
+  workmanship text,
+  discount_text text,
+  phone text,
+  instagram text,
+  website text,
+  maps_url text,
+  address text,
+  logo text,
+  cover_image text,
+  gallery text[] default '{}',
+  videos text[] default '{}',
+  featured boolean default false,
+  created_at timestamp with time zone default now()
+);
+
 create table if not exists public.messages (
   id bigserial primary key,
   name text not null,
@@ -87,6 +107,7 @@ create table if not exists public.site_settings (
 alter table public.members enable row level security;
 alter table public.events enable row level security;
 alter table public.gallery_images enable row level security;
+alter table public.sponsors enable row level security;
 alter table public.messages enable row level security;
 alter table public.site_settings enable row level security;
 
@@ -116,6 +137,15 @@ create policy "Enable read access for all users" on public.gallery_images for se
 create policy "Enable insert for all users" on public.gallery_images for insert with check (true);
 create policy "Enable update for all users" on public.gallery_images for update using (true) with check (true);
 create policy "Enable delete for all users" on public.gallery_images for delete using (true);
+
+drop policy if exists "Enable read access for all users" on public.sponsors;
+drop policy if exists "Enable insert for all users" on public.sponsors;
+drop policy if exists "Enable update for all users" on public.sponsors;
+drop policy if exists "Enable delete for all users" on public.sponsors;
+create policy "Enable read access for all users" on public.sponsors for select using (true);
+create policy "Enable insert for all users" on public.sponsors for insert with check (true);
+create policy "Enable update for all users" on public.sponsors for update using (true) with check (true);
+create policy "Enable delete for all users" on public.sponsors for delete using (true);
 
 drop policy if exists "Enable read access for all users" on public.messages;
 drop policy if exists "Enable insert for all users" on public.messages;

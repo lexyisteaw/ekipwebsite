@@ -16,7 +16,8 @@ import {
   Eye,
   Save,
   X,
-  Shield
+  Shield,
+  Store
 } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
 import { badgeOptions, MemberBadge, MemberMedia } from "@/components/MemberVisuals";
@@ -1231,12 +1232,232 @@ function MemberModal({ member, onSave, onClose }: any) {
   );
 }
 
+function SponsorModal({ sponsor, onSave, onClose }: any) {
+  const [formData, setFormData] = useState(sponsor || {
+    name: "",
+    category: "",
+    description: "",
+    workmanship: "",
+    discountText: "68 Riders uyelerine ozel indirim saglanacaktir.",
+    phone: "",
+    instagram: "",
+    website: "",
+    mapsUrl: "",
+    address: "",
+    logo: "",
+    coverImage: "",
+    gallery: [],
+    videos: [],
+    featured: false,
+  });
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState(sponsor?.coverImage || "");
+  const [galleryInput, setGalleryInput] = useState("");
+  const [videoInput, setVideoInput] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const compressImageFile = (file: File, maxWidth: number, quality: number, callback: (value: string) => void) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        ctx?.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCoverFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    compressImageFile(file, 900, 0.68, (value) => {
+      setCoverPreviewUrl(value);
+      setFormData({ ...formData, coverImage: value });
+    });
+  };
+
+  const handleGalleryFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+    const newGallery = [...(formData.gallery || [])];
+    let done = 0;
+    const selected = Array.from(files).slice(0, 8);
+
+    selected.forEach((file) => {
+      compressImageFile(file, 680, 0.62, (value) => {
+        newGallery.push(value);
+        done++;
+        if (done === selected.length) {
+          setFormData({ ...formData, gallery: newGallery });
+        }
+      });
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-dark/90 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass-panel p-8 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-display font-bold">{sponsor ? "SPONSOR DUZENLE" : "YENI SPONSOR EKLE"}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white">
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">Dukkan / Isletme Adi *</label>
+              <input required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Orn: 68 Riders Partner Servis" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">Yaptigi Is / Kategori</label>
+              <input value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Orn: Bakim, lastik, ekipman" />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">Telefon</label>
+              <input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="+90 5XX XXX XX XX" />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">Instagram</label>
+              <input value={formData.instagram} onChange={(e) => setFormData({ ...formData, instagram: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="dukkan_instagram" />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold mb-2">Google Maps Linki</label>
+              <input type="url" value={formData.mapsUrl} onChange={(e) => setFormData({ ...formData, mapsUrl: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="https://maps.google.com/..." />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">Web Sitesi</label>
+              <input type="url" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="https://..." />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">Adres</label>
+            <input value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Mahalle, cadde, il/ilce" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">Kisa Tanitim</label>
+            <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none resize-none" placeholder="Dukkan ne yapar, 68 Riders icin neden onemli?" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">Iscilik / Hizmet Detayi</label>
+            <textarea value={formData.workmanship} onChange={(e) => setFormData({ ...formData, workmanship: e.target.value })} rows={4} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none resize-none" placeholder="Yaptigi iscilik, uzmanlik alanlari, servis detaylari..." />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2">Indirim Metni</label>
+            <textarea value={formData.discountText} onChange={(e) => setFormData({ ...formData, discountText: e.target.value })} rows={2} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none resize-none" placeholder="68 Riders uyelerine ozel indirim saglanacaktir." />
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="text-lg font-bold mb-4 text-primary">DUKKAN RESMI / KAPAK</h3>
+            <input type="file" accept="image/*" onChange={handleCoverFileChange} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white" />
+            <input type="url" value={formData.coverImage?.startsWith("data:") ? "" : formData.coverImage} onChange={(e) => { setFormData({ ...formData, coverImage: e.target.value }); setCoverPreviewUrl(e.target.value); }} className="w-full mt-3 px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Veya dukkan resmi URL" />
+            {coverPreviewUrl && <MemberMedia src={coverPreviewUrl} fallback={coverPreviewUrl} alt="Sponsor cover" className="w-full h-56 object-cover rounded-lg mt-4" />}
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="text-lg font-bold mb-4 text-primary">IS GORSELLERI</h3>
+            <input type="file" accept="image/*" multiple onChange={handleGalleryFilesChange} className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white" />
+            <div className="flex gap-2 mt-3">
+              <input type="url" value={galleryInput} onChange={(e) => setGalleryInput(e.target.value)} className="flex-1 px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="Veya gorsel URL ekle" />
+              <button type="button" onClick={() => { if (galleryInput.trim()) { setFormData({ ...formData, gallery: [...(formData.gallery || []), galleryInput.trim()] }); setGalleryInput(""); } }} className="px-4 py-3 bg-primary rounded-lg font-bold">EKLE</button>
+            </div>
+            {formData.gallery?.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 mt-4">
+                {formData.gallery.map((item: string, index: number) => (
+                  <div key={`${item}-${index}`} className="relative group">
+                    <MemberMedia src={item} fallback={item} alt={`Sponsor gorsel ${index + 1}`} className="w-full h-24 object-cover rounded-lg" />
+                    <button type="button" onClick={() => setFormData({ ...formData, gallery: formData.gallery.filter((_: string, i: number) => i !== index) })} className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="text-lg font-bold mb-4 text-primary">VIDEO LINKLERI</h3>
+            <div className="flex gap-2">
+              <input type="url" value={videoInput} onChange={(e) => setVideoInput(e.target.value)} className="flex-1 px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none" placeholder="YouTube, Instagram veya mp4 video linki" />
+              <button type="button" onClick={() => { if (videoInput.trim()) { setFormData({ ...formData, videos: [...(formData.videos || []), videoInput.trim()] }); setVideoInput(""); } }} className="px-4 py-3 bg-primary rounded-lg font-bold">EKLE</button>
+            </div>
+            {formData.videos?.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {formData.videos.map((item: string, index: number) => (
+                  <div key={`${item}-${index}`} className="flex items-center justify-between rounded-lg bg-dark/40 px-3 py-2 text-sm">
+                    <span className="truncate">{item}</span>
+                    <button type="button" onClick={() => setFormData({ ...formData, videos: formData.videos.filter((_: string, i: number) => i !== index) })} className="text-primary font-bold">Sil</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <label className="flex items-center gap-3 rounded-lg border border-white/10 bg-dark/40 p-4">
+            <input type="checkbox" checked={formData.featured} onChange={(e) => setFormData({ ...formData, featured: e.target.checked })} />
+            <span className="font-bold">One cikan sponsor olarak goster</span>
+          </label>
+
+          <div className="flex gap-3 pt-4">
+            <button type="submit" disabled={isSaving} className="flex-1 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors disabled:opacity-60">
+              {isSaving ? "KAYDEDILIYOR..." : "KAYDET"}
+            </button>
+            <button type="button" onClick={onClose} disabled={isSaving} className="px-6 py-3 bg-gray-600 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-60">
+              IPTAL
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
   const {
     events,
     galleryImages,
     messages,
     members,
+    sponsors,
     aboutContent,
     siteSettings,
     loading,
@@ -1251,19 +1472,24 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     addMember,
     updateMember,
     deleteMember: deleteMemberFromContext,
+    addSponsor,
+    updateSponsor,
+    deleteSponsor: deleteSponsorFromContext,
     updateAboutContent,
     updateSiteSettings,
   } = useData();
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "events" | "gallery" | "messages" | "members" | "about" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "events" | "gallery" | "messages" | "members" | "sponsors" | "about" | "settings">("dashboard");
   
   // Modal states
   const [showEventModal, setShowEventModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
+  const [showSponsorModal, setShowSponsorModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const [editingImage, setEditingImage] = useState<any>(null);
   const [editingMember, setEditingMember] = useState<any>(null);
+  const [editingSponsor, setEditingSponsor] = useState<any>(null);
 
   // Local editing states
   const [localAboutContent, setLocalAboutContent] = useState(aboutContent);
@@ -1274,6 +1500,7 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     totalEvents: events.length,
     totalMembers: members.length,
     totalPhotos: galleryImages.length,
+    totalSponsors: sponsors.length,
     pendingMessages: messages.filter(m => m.status === "unread").length
   };
 
@@ -1399,6 +1626,43 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
     setShowMemberModal(true);
   };
 
+  const handleDeleteSponsor = async (id: number) => {
+    if (confirm("Bu sponsoru silmek istediginize emin misiniz?")) {
+      try {
+        await deleteSponsorFromContext(id);
+        alert("Sponsor silindi!");
+      } catch (error) {
+        alert(getErrorMessage(error));
+      }
+    }
+  };
+
+  const addOrUpdateSponsorHandler = async (sponsorData: any) => {
+    try {
+      if (editingSponsor) {
+        await updateSponsor(editingSponsor.id, sponsorData);
+        alert("Sponsor guncellendi!");
+      } else {
+        await addSponsor(sponsorData);
+        alert("Yeni sponsor eklendi!");
+      }
+      setShowSponsorModal(false);
+      setEditingSponsor(null);
+    } catch (error) {
+      alert(getErrorMessage(error));
+    }
+  };
+
+  const openEditSponsor = (sponsor: any) => {
+    setEditingSponsor(sponsor);
+    setShowSponsorModal(true);
+  };
+
+  const openAddSponsor = () => {
+    setEditingSponsor(null);
+    setShowSponsorModal(true);
+  };
+
   return (
     <main className="relative min-h-screen pt-32 pb-20 px-4">
       <div className="max-w-7xl mx-auto">
@@ -1430,6 +1694,9 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
 
         {/* Üye Modal */}
         {showMemberModal && <MemberModal member={editingMember} onSave={addOrUpdateMemberHandler} onClose={() => { setShowMemberModal(false); setEditingMember(null); }} />}
+
+        {/* Sponsor Modal */}
+        {showSponsorModal && <SponsorModal sponsor={editingSponsor} onSave={addOrUpdateSponsorHandler} onClose={() => { setShowSponsorModal(false); setEditingSponsor(null); }} />}
 
         {/* Navigation Tabs */}
         <div className="flex gap-3 mb-8 flex-wrap">
@@ -1482,6 +1749,15 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
           >
             <UsersIcon size={18} />
             ÜYELER
+          </button>
+          <button
+            onClick={() => setActiveTab("sponsors")}
+            className={`px-5 py-3 font-bold rounded-lg transition-colors flex items-center gap-2 ${
+              activeTab === "sponsors" ? "bg-primary text-white" : "glass-panel hover:bg-white/10"
+            }`}
+          >
+            <Store size={18} />
+            SPONSORLAR
           </button>
           <button
             onClick={() => setActiveTab("about")}
@@ -1796,6 +2072,77 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
               {!loading && members.length === 0 && (
                 <div className="glass-panel p-8 rounded-xl text-center">
                   <p className="text-gray-400">Henuz uye yok. Yeni Uye butonuyla ekleyebilirsiniz.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "sponsors" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-display font-bold">SPONSOR YONETIMI</h2>
+                <button
+                  onClick={openAddSponsor}
+                  className="px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-white hover:text-dark transition-colors flex items-center gap-2"
+                >
+                  <Plus size={20} />
+                  YENI SPONSOR
+                </button>
+              </div>
+
+              {loading && (
+                <div className="text-center py-16">
+                  <p className="text-gray-400 text-lg">Sponsorlar yukleniyor...</p>
+                </div>
+              )}
+
+              {!loading && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sponsors.map((sponsor) => (
+                    <div key={sponsor.id} className="glass-panel p-4 rounded-xl">
+                      <MemberMedia
+                        src={sponsor.coverImage || sponsor.logo || "/logo.png"}
+                        fallback="/logo.png"
+                        alt={sponsor.name}
+                        className="w-full h-48 object-cover rounded-lg mb-4 bg-dark/60"
+                      />
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-bold text-lg">{sponsor.name}</h3>
+                            {sponsor.featured && <span className="text-xs bg-primary px-2 py-1 rounded-full">ONE CIKAN</span>}
+                          </div>
+                          {sponsor.category && <p className="text-xs text-primary font-bold">{sponsor.category}</p>}
+                          {sponsor.phone && <p className="text-xs text-gray-400 mt-1">{sponsor.phone}</p>}
+                        </div>
+                        {sponsor.discountText && (
+                          <p className="text-sm text-gray-300 bg-dark/40 rounded-lg p-3">{sponsor.discountText}</p>
+                        )}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openEditSponsor(sponsor)}
+                            className="flex-1 px-3 py-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          >
+                            <Edit size={14} className="inline mr-1" />
+                            Duzenle
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSponsor(sponsor.id)}
+                            className="flex-1 px-3 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                          >
+                            <Trash2 size={14} className="inline mr-1" />
+                            Sil
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!loading && sponsors.length === 0 && (
+                <div className="glass-panel p-8 rounded-xl text-center">
+                  <p className="text-gray-400">Henuz sponsor yok. Yeni Sponsor butonuyla ekleyebilirsiniz.</p>
                 </div>
               )}
             </div>
