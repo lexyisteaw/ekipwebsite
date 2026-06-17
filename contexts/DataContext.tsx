@@ -53,6 +53,9 @@ export interface Member {
   telegram?: string;
   photo?: string;
   coverImage?: string;
+  badgeTitle?: string;
+  badgeVariant?: string;
+  profileEffect?: string;
   gallery?: string[];
   bio?: string;
   joinDate?: string;
@@ -149,6 +152,9 @@ function mapMember(row: any): Member {
     telegram: row.telegram,
     photo: row.photo,
     coverImage: row.cover_image,
+    badgeTitle: row.badge_title,
+    badgeVariant: row.badge_variant,
+    profileEffect: row.profile_effect,
     gallery: row.gallery || [],
     bio: row.bio,
     joinDate: row.join_date,
@@ -290,6 +296,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       telegram: member.telegram,
       photo: member.photo,
       cover_image: member.coverImage,
+      badge_title: member.badgeTitle,
+      badge_variant: member.badgeVariant || 'member',
+      profile_effect: member.profileEffect || 'none',
       gallery: member.gallery,
       bio: member.bio,
       join_date: member.joinDate,
@@ -321,6 +330,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       telegram: member.telegram,
       photo: member.photo,
       cover_image: member.coverImage,
+      badge_title: member.badgeTitle,
+      badge_variant: member.badgeVariant || 'member',
+      profile_effect: member.profileEffect || 'none',
       gallery: member.gallery,
       bio: member.bio,
       join_date: member.joinDate,

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useData } from "@/contexts/DataContext";
 import { Instagram, Twitter, Send, MessageCircle } from "lucide-react";
+import { MemberBadge, MemberMedia } from "@/components/MemberVisuals";
 
 export default function Uyeler() {
   const { members, loading } = useData();
@@ -45,12 +46,15 @@ export default function Uyeler() {
                   {/* Fotoğraf */}
                   <div className="relative h-64 overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-t from-dark via-transparent to-transparent z-10" />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <MemberMedia
                       src={member.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name + " " + member.surname) + "&size=400&background=ff0033&color=fff&bold=true"}
+                      fallback={"https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name + " " + member.surname) + "&size=400&background=ff0033&color=fff&bold=true"}
                       alt={`${member.name} ${member.surname}`}
                       className="object-cover w-full h-full transform group-hover:scale-110 transition-transform duration-700 filter grayscale group-hover:grayscale-0"
                     />
+                    <div className="absolute left-4 bottom-4 z-20">
+                      <MemberBadge member={member} size="small" />
+                    </div>
                   </div>
 
                   {/* İçerik */}

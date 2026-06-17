@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useData } from "@/contexts/DataContext";
 import { Instagram, Twitter, Send, MessageCircle, ArrowLeft, MapPin, Droplet, Calendar, Award, Navigation } from "lucide-react";
 import { useState } from "react";
+import { getProfileEffectClass, MemberBadge, MemberMedia } from "@/components/MemberVisuals";
 
 export default function UyeDetay() {
   const params = useParams();
@@ -40,9 +41,9 @@ export default function UyeDetay() {
         className="relative h-[50vh] w-full overflow-hidden"
       >
         <div className="absolute inset-0 bg-gradient-to-b from-dark/40 via-dark/60 to-dark z-10" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <MemberMedia
           src={member.coverImage || "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=2000&auto=format&fit=crop"}
+          fallback="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?q=80&w=2000&auto=format&fit=crop"
           alt="Cover"
           className="object-cover w-full h-full"
         />
@@ -71,10 +72,10 @@ export default function UyeDetay() {
           <div className="flex flex-col md:flex-row gap-8 items-start md:items-center">
             {/* Profile Photo */}
             <div className="relative">
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-primary shadow-2xl">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className={`w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-primary shadow-2xl ${getProfileEffectClass(member.profileEffect)}`}>
+                <MemberMedia
                   src={member.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name + " " + member.surname) + "&size=600&background=ff0033&color=fff&bold=true"}
+                  fallback={"https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name + " " + member.surname) + "&size=600&background=ff0033&color=fff&bold=true"}
                   alt={`${member.name} ${member.surname}`}
                   className="object-cover w-full h-full"
                 />
@@ -86,6 +87,9 @@ export default function UyeDetay() {
               <h1 className="text-4xl md:text-5xl font-display font-bold mb-2">
                 {member.name} {member.surname}
               </h1>
+              <div className="mb-4">
+                <MemberBadge member={member} size="large" />
+              </div>
               
               {/* Stats */}
               <div className="flex flex-wrap gap-6 mb-4">

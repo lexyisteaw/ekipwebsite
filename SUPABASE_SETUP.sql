@@ -17,6 +17,9 @@ create table if not exists public.members (
   telegram text,
   photo text,
   cover_image text,
+  badge_title text,
+  badge_variant text default 'member',
+  profile_effect text default 'none',
   gallery text[] default '{}',
   bio text,
   join_date text,
@@ -24,6 +27,10 @@ create table if not exists public.members (
   total_km integer default 0,
   created_at timestamp with time zone default now()
 );
+
+alter table public.members add column if not exists badge_title text;
+alter table public.members add column if not exists badge_variant text default 'member';
+alter table public.members add column if not exists profile_effect text default 'none';
 
 create table if not exists public.events (
   id bigserial primary key,

@@ -19,6 +19,7 @@ import {
   Shield
 } from "lucide-react";
 import { useData } from "@/contexts/DataContext";
+import { badgeOptions, MemberBadge, MemberMedia } from "@/components/MemberVisuals";
 
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) return error.message;
@@ -673,6 +674,9 @@ function MemberModal({ member, onSave, onClose }: any) {
     telegram: "",
     photo: "",
     coverImage: "",
+    badgeTitle: "",
+    badgeVariant: "member",
+    profileEffect: "none",
     bio: "",
     joinDate: "",
     totalEvents: 0,
@@ -891,6 +895,51 @@ function MemberModal({ member, onSave, onClose }: any) {
             </div>
           </div>
 
+          <div className="border-t border-white/10 pt-4">
+            <h3 className="text-lg font-bold mb-4 text-primary">ROZET & PROFIL STILI</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-bold mb-2">Rozet Tipi</label>
+                <select
+                  value={formData.badgeVariant || "member"}
+                  onChange={(e) => setFormData({ ...formData, badgeVariant: e.target.value })}
+                  className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
+                >
+                  {badgeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">Rozet Yazisi</label>
+                <input
+                  type="text"
+                  value={formData.badgeTitle || ""}
+                  onChange={(e) => setFormData({ ...formData, badgeTitle: e.target.value })}
+                  className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
+                  placeholder="Orn: KURUCU"
+                />
+                <p className="text-xs text-gray-500 mt-1">Bos kalirsa rozet tipinin adi gorunur.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-2">Profil Efekti</label>
+                <select
+                  value={formData.profileEffect || "none"}
+                  onChange={(e) => setFormData({ ...formData, profileEffect: e.target.value })}
+                  className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
+                >
+                  <option value="none">Sade</option>
+                  <option value="red-glow">Kirmizi Glow</option>
+                  <option value="gold-glow">Altin Glow</option>
+                  <option value="neon-ring">Neon Halka</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-4">
+              <MemberBadge member={formData} />
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold mb-2">Motor Markası</label>
@@ -987,15 +1036,14 @@ function MemberModal({ member, onSave, onClose }: any) {
                   setSelectedFile(null);
                 }}
                 className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
-                placeholder="https://example.com/photo.jpg"
+                placeholder="https://example.com/photo.gif veya profile.mp4"
               />
             </div>
 
             {previewUrl && (
               <div className="mt-3">
                 <label className="block text-sm font-bold mb-2">Profil Önizleme</label>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={previewUrl} alt="Preview" className="w-32 h-32 object-cover rounded-full border-4 border-primary" />
+                <MemberMedia src={previewUrl} fallback={previewUrl} alt="Preview" className="w-32 h-32 object-cover rounded-full border-4 border-primary" />
               </div>
             )}
           </div>
@@ -1027,15 +1075,14 @@ function MemberModal({ member, onSave, onClose }: any) {
                   setSelectedCoverFile(null);
                 }}
                 className="w-full px-4 py-3 bg-dark/50 border border-white/10 rounded-lg focus:border-primary focus:outline-none"
-                placeholder="https://example.com/cover.jpg"
+                placeholder="https://example.com/cover.gif veya cover.mp4"
               />
             </div>
 
             {coverPreviewUrl && (
               <div className="mt-3">
                 <label className="block text-sm font-bold mb-2">Cover Önizleme</label>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={coverPreviewUrl} alt="Cover Preview" className="w-full h-48 object-cover rounded-lg" />
+                <MemberMedia src={coverPreviewUrl} fallback={coverPreviewUrl} alt="Cover Preview" className="w-full h-48 object-cover rounded-lg" />
               </div>
             )}
           </div>
@@ -1702,12 +1749,17 @@ export default function AdminPanel({ onLogout }: { onLogout?: () => void }) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {members.map((member) => (
                   <div key={member.id} className="glass-panel p-4 rounded-xl">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <div className="relative">
+                    <MemberMedia
                       src={member.photo || "https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name + " " + member.surname) + "&size=200&background=ff0033&color=fff&bold=true"}
+                      fallback={"https://ui-avatars.com/api/?name=" + encodeURIComponent(member.name + " " + member.surname) + "&size=200&background=ff0033&color=fff&bold=true"}
                       alt={`${member.name} ${member.surname}`}
                       className="w-full h-48 object-cover rounded-lg mb-4"
                     />
+                      <div className="absolute left-3 bottom-7">
+                        <MemberBadge member={member} size="small" />
+                      </div>
+                    </div>
                     <div className="space-y-3">
                       <div>
                         <h3 className="font-bold text-lg">{member.name} {member.surname}</h3>
