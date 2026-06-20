@@ -40,7 +40,7 @@ export default function Navbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed inset-x-0 top-0 z-40 w-full max-w-full overflow-x-clip bg-dark/80 backdrop-blur-xl border-b border-white/10"
+      className="fixed inset-x-0 top-0 z-40 w-full max-w-full bg-dark/80 backdrop-blur-xl border-b border-white/10"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -93,15 +93,15 @@ export default function Navbar() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="fixed inset-x-0 bottom-0 top-20 w-screen max-w-full overflow-y-auto border-t border-white/10 bg-dark/95 backdrop-blur-xl md:hidden"
+          className="absolute inset-x-0 top-full h-[calc(100dvh-5rem)] w-full max-w-full overflow-x-hidden overflow-y-auto border-t border-white/10 bg-dark/95 backdrop-blur-xl md:hidden"
         >
-          <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 px-6 py-6">
+          <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-3 px-6 py-5">
             {links.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block text-lg font-bold tracking-wider transition-colors ${
+                className={`block w-full max-w-full break-words py-1 text-base font-bold tracking-wider transition-colors ${
                   pathname === link.href ? "text-primary" : "text-white hover:text-primary"
                 }`}
               >
