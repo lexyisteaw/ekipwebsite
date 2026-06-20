@@ -8,10 +8,24 @@
   --background-end-rgb: 5, 5, 5;
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
-  overflow-x: hidden;
+  position: relative;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
 }
 
 ::-webkit-scrollbar {

@@ -96,7 +96,7 @@ export default function MagazaPage() {
           </div>
           <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
             <div>
-              <h1 className="mb-6 text-5xl font-display font-bold leading-none md:text-7xl">
+              <h1 className="mb-6 text-3xl font-display font-bold leading-none sm:text-5xl md:text-7xl">
                 KULÜP <span className="text-primary">MAĞAZASI</span>
               </h1>
               <p className="max-w-3xl text-lg leading-relaxed text-gray-300 md:text-xl">

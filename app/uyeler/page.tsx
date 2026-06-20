@@ -17,7 +17,7 @@ export default function Uyeler() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <h1 className="text-5xl md:text-7xl font-display font-bold mb-8 text-center">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-display font-bold mb-8 text-center">
             ÜYELER
           </h1>
           <div className="w-32 h-1 bg-primary mx-auto mb-16" />

@@ -22,7 +22,7 @@ export default function SponsorlarPage() {
             <Handshake size={16} />
             Kulup dostu isletmeler
           </div>
-          <h1 className="text-5xl md:text-7xl font-display font-bold leading-tight mb-6">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-display font-bold leading-tight mb-6">
             SPONSORLAR
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl">

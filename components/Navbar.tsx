@@ -5,11 +5,22 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   const links = [
     { href: "/", label: "ANASAYFA" },
@@ -29,7 +40,7 @@ export default function Navbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 right-0 z-40 bg-dark/80 backdrop-blur-xl border-b border-white/10"
+      className="fixed inset-x-0 top-0 z-40 w-full max-w-full overflow-x-clip bg-dark/80 backdrop-blur-xl border-b border-white/10"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -82,9 +93,9 @@ export default function Navbar() {
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-dark/95 backdrop-blur-xl border-t border-white/10"
+          className="fixed inset-x-0 bottom-0 top-20 w-screen max-w-full overflow-y-auto border-t border-white/10 bg-dark/95 backdrop-blur-xl md:hidden"
         >
-          <div className="px-4 py-6 grid grid-cols-1 gap-4">
+          <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-4 px-6 py-6">
             {links.map((link) => (
               <Link
                 key={link.href}
